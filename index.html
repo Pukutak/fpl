@@ -35,6 +35,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .layout{display:grid;grid-template-columns:248px minmax(0,1fr);gap:14px;margin-top:14px;align-items:start}
 .rail{position:sticky;top:14px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 28px);overflow:auto}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:3px;padding:11px 12px}
+.panel h3 .pgroup.toggle{font-size:11px;letter-spacing:.14em;color:var(--ink-faint);margin:0;width:auto}
+.panel h3 .pgroup.toggle:hover{color:var(--ink)}
 .panel h3{margin:0 0 9px;font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);display:flex;justify-content:space-between;align-items:baseline}
 .fgroup{margin-bottom:11px}
 .fgroup:last-child{margin-bottom:0}
@@ -49,6 +51,13 @@ button{font:inherit;color:inherit;cursor:pointer}
   color:var(--ink-faint);margin:8px 0 4px;display:block;background:none;border:0;padding:0;text-align:left;width:100%}
 .pgroup:first-child{margin-top:0}
 .pgroup.toggle:hover{color:var(--ink)}
+.chip.lay{text-transform:none;font-family:var(--sans);font-weight:500;font-size:11.5px;letter-spacing:0;
+  position:relative;padding-right:6px}
+.chip.lay .x{margin-left:5px;opacity:.45;font-family:var(--mono);font-size:10px}
+.chip.lay:hover .x{opacity:.8}
+.chip.lay .x:hover{color:var(--red);opacity:1}
+#layoutName{width:100%;font-family:var(--sans);font-size:12px;padding:5px 7px;
+  border:1px solid var(--line);border-radius:2px;background:var(--paper);color:var(--ink)}
 .plist{display:flex;flex-direction:column;gap:1px}
 .profrow{display:flex;align-items:center;gap:6px;width:100%;text-align:left;padding:5px 7px;border:0;
   border-radius:2px;background:var(--paper);font-family:var(--sans);font-size:12px;color:var(--ink-soft);
@@ -377,28 +386,37 @@ tbody td.l:has(.mug){padding:3px 6px}
           </div>
         </div>
         <p class="note" id="dataNote">Baked snapshot — works offline, never changes.</p>
-        <div class="fgroup" style="margin-top:9px">
-          <div class="flabel"><span>Your own data endpoint</span><button class="linkbtn" id="useCustom">use it</button></div>
-          <input type="search" id="apiUrl" placeholder="auto-detected if published alongside this page" aria-label="Custom data endpoint">
-          <p class="note" style="margin-top:4px">Left blank, the tool looks for <b>data/bootstrap-static.json</b> next to this page and uses it automatically. Fill it in only to point somewhere else, such as a Cloudflare Worker.</p>
-        </div>
-        <div class="tog" style="margin-top:8px"><span>Fetch per-gameweek history (~5 MB)</span>
-          <button class="sw" id="t-deep" aria-pressed="true" aria-label="Fetch per-gameweek history"></button></div>
         <div class="fgroup" style="margin-top:8px">
           <div class="flabel"><span>Recent-form window</span><b id="fwOut">6 GWs</b></div>
           <input type="range" id="formwin" min="1" max="15" step="1" value="6">
         </div>
         <div style="display:flex;gap:10px;margin-top:7px;flex-wrap:wrap">
           <button class="linkbtn" id="refreshGh">refresh now</button>
-          <button class="linkbtn" id="tryApi">try official API</button>
-          <button class="linkbtn" id="showPaste">paste manually</button>
         </div>
-        <div id="pasteBox" style="display:none;margin-top:8px">
-          <textarea id="pasteJson" placeholder="Paste the JSON from fantasy.premierleague.com/api/bootstrap-static/ here"></textarea>
-          <div style="display:flex;gap:10px;margin-top:6px">
-            <button class="linkbtn" id="loadPaste">load pasted data</button>
-            <button class="linkbtn" id="retryFetch">retry fetch</button>
-          </div>
+      </div>
+
+      <div class="panel ledger">
+        <h3>Squad ledger</h3>
+        <div class="budget" id="bud">£100.0m <small>free</small></div>
+        <div class="bar"><i id="budbar" style="width:0%"></i></div>
+        <div class="quota" id="quota"></div>
+        <ul class="picks" id="picks"></ul>
+        <p class="empty-note" id="pickNote">Tap <b>+</b> on any row to build a 15-man squad. Budget £100.0m, max 3 per club.</p>
+        <p class="warn" id="warn"></p>
+        <div style="margin-top:8px;display:flex;gap:10px">
+          <button class="linkbtn" id="copySquad">copy squad</button>
+          <button class="linkbtn" id="clearSquad">clear</button>
+        </div>
+      </div>
+          <div class="panel">
+        <h3>Watchlist <span id="watchCount" class="hcount">0</span></h3>
+        <div class="tog"><span>Show watchlist only</span><button class="sw" id="t-watch" aria-pressed="false" aria-label="Show watchlist only"></button></div>
+        <ul class="wlist" id="watchList"></ul>
+        <p class="note" id="watchNote">Tap ☆ on any row to track a player. Tap the pin to hold them above every filter.</p>
+        <div style="display:flex;gap:10px;margin-top:7px">
+          <button class="linkbtn" id="copyWatch">copy</button>
+          <button class="linkbtn" id="clearWatch">clear all</button>
+          <button class="linkbtn" id="clearPins">unpin all</button>
         </div>
       </div>
 
@@ -452,8 +470,16 @@ tbody td.l:has(.mug){padding:3px 6px}
       </div>
 
       <div class="panel">
-        <h3>Columns <button class="linkbtn" id="resetCols">reset</button></h3>
-        <div class="chips" style="margin-bottom:9px" id="layouts"></div>
+        <h3>Columns <span><button class="linkbtn" id="saveLayout">save layout</button> · <button class="linkbtn" id="resetCols">reset</button></span></h3>
+        <div id="layouts" style="margin-bottom:9px"></div>
+        <div id="layoutSaveBox" style="display:none;margin-bottom:9px">
+          <input type="text" id="layoutName" maxlength="24" placeholder="Name this layout…" aria-label="Layout name">
+          <div style="display:flex;gap:10px;margin-top:5px">
+            <button class="linkbtn" id="confirmLayout">save</button>
+            <button class="linkbtn" id="cancelLayout">cancel</button>
+          </div>
+        </div>
+        <p class="note" id="layoutNote" style="display:none"></p>
         <ul class="cols" id="colList"></ul>
         <p class="note">Drag rows here, or drag the table headers, to reorder.</p>
       </div>
@@ -471,31 +497,31 @@ tbody td.l:has(.mug){padding:3px 6px}
       </div>
 
       <div class="panel">
-        <h3>Watchlist <span id="watchCount" class="hcount">0</span></h3>
-        <div class="tog"><span>Show watchlist only</span><button class="sw" id="t-watch" aria-pressed="false" aria-label="Show watchlist only"></button></div>
-        <ul class="wlist" id="watchList"></ul>
-        <p class="note" id="watchNote">Tap ☆ on any row to track a player. Tap the pin to hold them above every filter.</p>
-        <div style="display:flex;gap:10px;margin-top:7px">
-          <button class="linkbtn" id="copyWatch">copy</button>
-          <button class="linkbtn" id="clearWatch">clear all</button>
-          <button class="linkbtn" id="clearPins">unpin all</button>
+        <h3><button class="pgroup toggle" id="advToggle" aria-expanded="false" style="margin:0">▸ Advanced data source</button></h3>
+        <div id="advBody" style="display:none">
+          <p class="note" style="margin-top:0">Leave this alone unless the default is failing. The tool already finds data published alongside this page automatically.</p>
+        <div class="fgroup" style="margin-top:9px">
+          <div class="flabel"><span>Your own data endpoint</span><button class="linkbtn" id="useCustom">use it</button></div>
+          <input type="search" id="apiUrl" placeholder="auto-detected if published alongside this page" aria-label="Custom data endpoint">
+          <p class="note" style="margin-top:4px">Left blank, the tool looks for <b>data/bootstrap-static.json</b> next to this page and uses it automatically. Fill it in only to point somewhere else, such as a Cloudflare Worker.</p>
+        </div>
+        <div class="tog" style="margin-top:8px"><span>Fetch per-gameweek history (~5 MB)</span>
+          <button class="sw" id="t-deep" aria-pressed="true" aria-label="Fetch per-gameweek history"></button></div>
+          <div style="display:flex;gap:10px;margin-top:7px;flex-wrap:wrap">
+            <button class="linkbtn" id="tryApi">try official API</button>
+            <button class="linkbtn" id="showPaste">paste manually</button>
+          </div>
+        <div id="pasteBox" style="display:none;margin-top:8px">
+          <textarea id="pasteJson" placeholder="Paste the JSON from fantasy.premierleague.com/api/bootstrap-static/ here"></textarea>
+          <div style="display:flex;gap:10px;margin-top:6px">
+            <button class="linkbtn" id="loadPaste">load pasted data</button>
+            <button class="linkbtn" id="retryFetch">retry fetch</button>
+          </div>
+        </div>
         </div>
       </div>
 
-      <div class="panel ledger">
-        <h3>Squad ledger</h3>
-        <div class="budget" id="bud">£100.0m <small>free</small></div>
-        <div class="bar"><i id="budbar" style="width:0%"></i></div>
-        <div class="quota" id="quota"></div>
-        <ul class="picks" id="picks"></ul>
-        <p class="empty-note" id="pickNote">Tap <b>+</b> on any row to build a 15-man squad. Budget £100.0m, max 3 per club.</p>
-        <p class="warn" id="warn"></p>
-        <div style="margin-top:8px;display:flex;gap:10px">
-          <button class="linkbtn" id="copySquad">copy squad</button>
-          <button class="linkbtn" id="clearSquad">clear</button>
-        </div>
-      </div>
-    </aside>
+</aside>
 
     <main>
       <div class="tabs" role="tablist">
@@ -772,6 +798,20 @@ var LAYOUTS={
   'Value':{o:['pos','team','pr','o','tp','tp90','val','ppg','mn','ss','bps','ict','fdr','fx'],h:[]},
   'Compact':{o:['pos','team','pr','tp','val','fx'],h:[]}
 };
+var CUSTOMLAYOUTS=[];
+function currentLayout(){
+  return {o:S.order.slice(), h:Array.from(S.hidden), photo:S.showPhoto};
+}
+function applySavedLayout(i){
+  var L=CUSTOMLAYOUTS[i]; if(!L) return;
+  var kept=(L.o||[]).filter(function(k){return ALLCOLS.indexOf(k)>=0;});
+  ALLCOLS.forEach(function(k){ if(kept.indexOf(k)<0) kept.push(k); });
+  S.order=kept;
+  S.hidden=new Set((L.h||[]).filter(function(k){return ALLCOLS.indexOf(k)>=0;}));
+  S.showPhoto=(L.photo!==false);
+  if(S.order.indexOf(S.sort)<0||S.hidden.has(S.sort)){ S.sort='tp'; S.dir=-1; }
+  renderColList(); save(); render();
+}
 function applyLayout(name){
   var L=LAYOUTS[name]; if(!L) return;
   var rest=ALLCOLS.filter(function(k){return L.o.indexOf(k)<0;});
@@ -795,8 +835,18 @@ function dropCol(src,target,after){
   S.order=arr; renderColList(); save(); render();
 }
 function renderColList(){
-  document.getElementById('layouts').innerHTML=Object.keys(LAYOUTS).map(function(n){
-    return '<button class="chip" data-layout="'+n+'">'+n+'</button>';}).join('');
+  var lh='';
+  if(CUSTOMLAYOUTS.length){
+    lh+='<div class="pgroup">Your layouts</div><div class="chips" style="margin-bottom:8px">'+
+      CUSTOMLAYOUTS.map(function(L,i){
+        return '<button class="chip lay" data-clayout="'+i+'" title="'+
+          esc((L.o||[]).filter(function(k){return (L.h||[]).indexOf(k)<0;}).length+' columns shown')+'">'+
+          esc(L.n)+'<span class="x" data-dellayout="'+i+'" role="button" aria-label="Delete layout">✕</span></button>';
+      }).join('')+'</div>';
+  }
+  lh+='<div class="pgroup">Built-in</div><div class="chips">'+Object.keys(LAYOUTS).map(function(n){
+    return '<button class="chip" data-layout="'+n+'">'+n+'</button>';}).join('')+'</div>';
+  document.getElementById('layouts').innerHTML=lh;
   var pinnedRow='<li class="fixedcol'+(S.showPhoto?' on':'')+'">'+
     '<span class="grip lockgrip" aria-hidden="true" title="Fixed position">⤫</span>'+
     '<button class="box" data-photovis="1" aria-pressed="'+S.showPhoto+'" aria-label="'+
@@ -1742,6 +1792,8 @@ function goLive(quiet){
     note('Couldn\'t reach the API — '+esc(e.message)+'. The FPL API sends no CORS headers, so a page with no server '+
       'of its own depends on public proxies, and those come and go. Open <a href="'+API+'" target="_blank" rel="noopener">'+
       'the endpoint</a> in a tab, select all, copy, and paste it below — that always works.','err');
+    var ab=document.getElementById('advBody');
+    if(ab&&ab.style.display==='none') document.getElementById('advToggle').click();
     document.getElementById('pasteBox').style.display='';
     render();
   });
@@ -1778,7 +1830,7 @@ var STORE=(function(){
 function save(){
   STORE.set('fpl:v2',JSON.stringify({
     squad:Array.from(S.squad),custom:CUSTOM,pins:Array.from(S.pins),watch:Array.from(S.watch),
-    order:S.order,hidden:Array.from(S.hidden),pspan:S.pspan,rowScale:S.rowScale,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw}));
+    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,rowScale:S.rowScale,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw}));
 }
 function load(){
   return STORE.get('fpl:v2').then(function(raw){
@@ -1789,6 +1841,7 @@ function load(){
     (o.pins||[]).forEach(function(c){S.pins.add(c);});
     (o.watch||[]).forEach(function(c){S.watch.add(c);});
     CUSTOM=o.custom||[];
+    CUSTOMLAYOUTS=o.layouts||[];
     if(o.pspan) S.pspan=o.pspan;
     if(o.rowScale) S.rowScale=o.rowScale;
     (o.planSel||[]).forEach(function(t){S.planSel.add(t);});
@@ -2027,6 +2080,13 @@ function init(){
     render();
   });
   on('retryFetch','click',function(){ goLive(); });
+  on('advToggle','click',function(){
+    var body=document.getElementById('advBody');
+    var open=body.style.display==='none';
+    body.style.display=open?'':'none';
+    this.setAttribute('aria-expanded',open?'true':'false');
+    this.textContent=(open?'▾':'▸')+' Advanced data source';
+  });
   on('apiUrl','input',function(){ S.apiUrl=this.value; save(); });
   on('useCustom','click',function(){
     S.season='live';
@@ -2068,7 +2128,36 @@ function init(){
     var d=e.target.closest('[data-down]'); if(d){ moveCol(d.dataset.down,1); }
   });
   document.getElementById('layouts').addEventListener('click',function(e){
+    var d=e.target.closest('[data-dellayout]');
+    if(d){ e.stopPropagation(); e.preventDefault();
+      CUSTOMLAYOUTS.splice(+d.dataset.dellayout,1); renderColList(); save(); return; }
+    var c=e.target.closest('[data-clayout]');
+    if(c){ applySavedLayout(+c.dataset.clayout); return; }
     var b=e.target.closest('[data-layout]'); if(b) applyLayout(b.dataset.layout);
+  });
+  function showLayoutBox(on){
+    document.getElementById('layoutSaveBox').style.display=on?'':'none';
+    if(on){ var f=document.getElementById('layoutName'); f.value=''; f.focus(); }
+  }
+  on('saveLayout','click',function(){
+    showLayoutBox(document.getElementById('layoutSaveBox').style.display==='none');
+  });
+  on('cancelLayout','click',function(){ showLayoutBox(false); });
+  on('layoutName','keydown',function(e){
+    if(e.key==='Enter'){ e.preventDefault(); document.getElementById('confirmLayout').click(); }
+    if(e.key==='Escape') showLayoutBox(false);
+  });
+  on('confirmLayout','click',function(){
+    var n=document.getElementById('layoutName').value.trim();
+    var note=document.getElementById('layoutNote');
+    note.style.display='';
+    if(!n){ note.textContent='Give the layout a name first.'; return; }
+    var L=currentLayout(); L.n=n.slice(0,24);
+    CUSTOMLAYOUTS.push(L);
+    renderColList(); save(); showLayoutBox(false);
+    var shown=L.o.filter(function(k){return L.h.indexOf(k)<0;}).length+(L.photo?1:0)+2;
+    note.textContent='Saved "'+n+'" — '+shown+' columns in your order.'+
+      (STORE.kind==='none'?' This session only.':' Kept between visits.');
   });
   on('resetCols','click',function(){ applyLayout('Standard'); });
 
