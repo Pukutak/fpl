@@ -379,8 +379,8 @@ tbody td.l:has(.mug){padding:3px 6px}
         <p class="note" id="dataNote">Baked snapshot — works offline, never changes.</p>
         <div class="fgroup" style="margin-top:9px">
           <div class="flabel"><span>Your own data endpoint</span><button class="linkbtn" id="useCustom">use it</button></div>
-          <input type="search" id="apiUrl" placeholder="e.g. data/bootstrap-static.json" aria-label="Custom data endpoint">
-          <p class="note" style="margin-top:4px">Set this and it takes priority over everything else. A relative path on your own site needs no CORS at all.</p>
+          <input type="search" id="apiUrl" placeholder="auto-detected if published alongside this page" aria-label="Custom data endpoint">
+          <p class="note" style="margin-top:4px">Left blank, the tool looks for <b>data/bootstrap-static.json</b> next to this page and uses it automatically. Fill it in only to point somewhere else, such as a Cloudflare Worker.</p>
         </div>
         <div class="tog" style="margin-top:8px"><span>Fetch per-gameweek history (~5 MB)</span>
           <button class="sw" id="t-deep" aria-pressed="true" aria-label="Fetch per-gameweek history"></button></div>
@@ -1657,6 +1657,16 @@ function archiveAge(){
     return new Date(j[0].commit.committer.date).getTime();
   }).catch(function(){ return null; });
 }
+function startLive(){
+  note('Looking for data published with this page…');
+  return autoDetectEndpoint().then(function(u){
+    if(!u) return goGitHub();
+    return goCustom().catch(function(e){
+      note('Your endpoint failed ('+esc(e.message)+'). Falling back to the archive…');
+      return goGitHub();
+    });
+  });
+}
 function goGitHub(){
   note('Fetching the latest data…');
   return Promise.all([ghFetch('players_raw.csv'),ghFetch('fixtures.csv'),ghFetch('teams.csv')])
@@ -1686,6 +1696,29 @@ function ingest(json,fixturesJson){
 function fixturesUrlFor(u){
   return u.indexOf('bootstrap-static')>=0 ? u.replace('bootstrap-static','fixtures') : null;
 }
+/* Look for data published alongside this page. A GitHub Action that commits
+   data/bootstrap-static.json makes it same-origin, so no CORS is involved. */
+var AUTO_CANDIDATES=['data/bootstrap-static.json','bootstrap-static.json'];
+function autoDetectEndpoint(){
+  if((S.apiUrl||'').trim()) return Promise.resolve(S.apiUrl);
+  var i=0;
+  function next(){
+    if(i>=AUTO_CANDIDATES.length) return Promise.resolve(null);
+    var u=AUTO_CANDIDATES[i++];
+    return fetchTimeout(u,8000).then(function(r){
+      if(!r.ok) throw new Error('no');
+      var ct=(r.headers&&r.headers.get&&r.headers.get('content-type'))||'';
+      if(ct.indexOf('html')>=0) throw new Error('html');
+      return r.json();
+    }).then(function(j){
+      if(!j||!j.elements||!j.elements.length) throw new Error('not bootstrap-static');
+      S.apiUrl=u; save();
+      var f=document.getElementById('apiUrl'); if(f) f.value=u;
+      return u;
+    }).catch(next);
+  }
+  return next().catch(function(){ return null; });
+}
 function goCustom(){
   var u=(S.apiUrl||'').trim();
   if(!u) return Promise.reject(new Error('no endpoint set'));
@@ -1697,8 +1730,10 @@ function goCustom(){
                   .catch(function(){ return null; })
               : Promise.resolve(null));
   return Promise.all(jobs).then(function(r){
+    var json0=r[0];
     ingest(r[0], r[1]);
-    note('Loaded from your own endpoint — no proxy, always current.','ok');
+    note('Loaded from <b>'+esc(u)+'</b> — published with this page, so no proxy and no CORS. '+
+      (json0&&json0.events?'':'')+'Always current.','ok');
   });
 }
 function goLive(quiet){
@@ -1987,13 +2022,7 @@ function init(){
     var b=e.target.closest('[data-season]'); if(!b) return;
     S.season=b.dataset.season; DOMAIN={};
     document.querySelectorAll('[data-season]').forEach(function(x){x.setAttribute('aria-pressed',x===b);});
-    if(S.season==='live'&&!LIVE){
-      if((S.apiUrl||'').trim()) goCustom().catch(function(e){
-        note('Your endpoint failed ('+esc(e.message)+'). Falling back to the archive…');
-        goGitHub();
-      });
-      else goGitHub();
-    }
+    if(S.season==='live'&&!LIVE) startLive();
     else if(S.season==='hist') note('Baked snapshot — works offline, never changes.');
     render();
   });
@@ -2010,7 +2039,7 @@ function init(){
     S.season='live';
     document.querySelectorAll('[data-season]').forEach(function(x){
       x.setAttribute('aria-pressed', x.dataset.season==='live'); });
-    goGitHub();
+    startLive();
   });
   on('tryApi','click',function(){
     S.season='live';
