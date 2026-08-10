@@ -1,0 +1,51 @@
+name: Refresh FPL data
+
+on:
+  schedule:
+    - cron: '23 * * * *'      # hourly, 23 min past
+  workflow_dispatch:           # and a manual "Run workflow" button
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fpl-data
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch from the FPL API
+        run: |
+          mkdir -p data
+          UA='Mozilla/5.0 (compatible; fpl-desk/1.0)'
+          curl -sSfL --retry 3 --retry-delay 5 -H "User-Agent: $UA" \
+            https://fantasy.premierleague.com/api/bootstrap-static/ \
+            -o data/bootstrap-static.json
+          curl -sSfL --retry 3 --retry-delay 5 -H "User-Agent: $UA" \
+            https://fantasy.premierleague.com/api/fixtures/ \
+            -o data/fixtures.json
+
+      - name: Reject a malformed download
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          b = json.load(open('data/bootstrap-static.json'))
+          f = json.load(open('data/fixtures.json'))
+          assert len(b.get('elements', [])) > 300, 'too few players'
+          assert len(b.get('teams', [])) == 20, 'expected 20 teams'
+          assert len(f) > 100, 'too few fixtures'
+          print('ok:', len(b['elements']), 'players,', len(f), 'fixtures')
+          PY
+
+      - name: Commit only if something changed
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/bootstrap-static.json data/fixtures.json
+          git diff --staged --quiet && echo 'no change' && exit 0
+          git commit -m "FPL data $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
