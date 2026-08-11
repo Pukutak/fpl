@@ -582,7 +582,7 @@ D.teams.forEach(function(t){
 var LIVE=null, LIVEMETA=null, LIVEGW=null;
 
 var S={q:'',pos:new Set(),teams:new Set(),rules:[],pins:new Set(),watch:new Set(),watchOnly:false,
-  startGw:1,span:6,pspan:10,planFrom:1,planTo:10,rowScale:0,showPhoto:true,ledgerOpen:false,apiUrl:'',formWin:6,deepGw:true,xi:new Set(),cap:null,sqGw:1,sqSel:null,planSel:new Set(),planHide:false,order:null,hidden:null,nodata:false,fit:false,sp:false,
+  startGw:1,span:6,pspan:10,planFrom:1,planTo:10,rowScale:0,showPhoto:true,ledgerOpen:false,apiUrl:'',formWin:6,deepGw:true,xi:new Set(),cap:null,sqGw:1,sqSel:null,planSel:new Set(),planHide:false,planSort:'fdr',planDir:1,order:null,hidden:null,nodata:false,fit:false,sp:false,
   season:'hist',sort:'tp',dir:-1,tab:'players',squad:new Set(),preset:null};
 
 /* ---------- accessors ---------- */
@@ -1163,8 +1163,8 @@ function planSizing(){
 function renderPlanGrid(){
   var z=planSizing(), n=z.n;
   var ord=function(a,b){
-    if(S.sort==='team') return a.nm.localeCompare(b.nm)*(S.dir>0?1:-1);
-    return (planAvg(a.id)-planAvg(b.id))*(S.dir>0?1:-1);
+    if(S.planSort==='team') return a.nm.localeCompare(b.nm)*(S.planDir>0?1:-1);
+    return (planAvg(a.id)-planAvg(b.id))*(S.planDir>0?1:-1);
   };
   var sel=D.teams.filter(function(t){return S.planSel.has(t.id);}).sort(ord);
   var rest=D.teams.filter(function(t){return !S.planSel.has(t.id);}).sort(ord);
@@ -1221,8 +1221,8 @@ function renderPlanner(){
   var nowGw=LIVEGW||1, n=planLen();
   var h='<div class="pwrap" style="'+planSizing().vars+'">';
   h+='<div class="ptools">'+
-     '<button class="chip'+(S.sort!=='team'?' on':'')+'" data-psort="fdr">Sort by fixture run</button>'+
-     '<button class="chip'+(S.sort==='team'?' on':'')+'" data-psort="team">Sort A–Z</button>'+
+     '<button class="chip'+(S.planSort!=='team'?' on':'')+'" data-psort="fdr">Sort by fixture run</button>'+
+     '<button class="chip'+(S.planSort==='team'?' on':'')+'" data-psort="team">Sort A–Z</button>'+
      '<span class="legend"><b>Easier</b>'+[1,2,3,4,5].map(function(d){
         return '<i style="background:'+fdrColor(d)+'"></i>';}).join('')+'<b>Harder</b></span>'+
      '<span class="legend key"><em>ARS</em> home · <em class="aw">ars</em> away</span></div>';
@@ -1947,7 +1947,7 @@ var STORE=(function(){
 function save(){
   STORE.set('fpl:v2',JSON.stringify({
     squad:Array.from(S.squad),custom:CUSTOM,pins:Array.from(S.pins),watch:Array.from(S.watch),
-    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,planFrom:S.planFrom,planTo:S.planTo,rowScale:S.rowScale,ledgerOpen:S.ledgerOpen,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw}));
+    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,planFrom:S.planFrom,planTo:S.planTo,planSort:S.planSort,planDir:S.planDir,rowScale:S.rowScale,ledgerOpen:S.ledgerOpen,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw}));
 }
 function load(){
   return STORE.get('fpl:v2').then(function(raw){
@@ -1962,6 +1962,8 @@ function load(){
     if(o.pspan) S.pspan=o.pspan;
     if(o.planFrom) S.planFrom=o.planFrom;
     if(o.planTo) S.planTo=o.planTo;
+    if(o.planSort) S.planSort=o.planSort;
+    if(o.planDir) S.planDir=o.planDir;
     if(o.rowScale) S.rowScale=o.rowScale;
     if(o.ledgerOpen===true) S.ledgerOpen=true;
     (o.planSel||[]).forEach(function(t){S.planSel.add(t);});
@@ -2094,7 +2096,6 @@ function init(){
     var b=e.target.closest('[data-tab]'); if(!b) return;
     S.tab=b.dataset.tab;
     document.querySelectorAll('.tab').forEach(function(t){t.setAttribute('aria-selected',t===b);});
-    if(S.tab==='planner'&&S.sort!=='team') { S.sort='fdr'; S.dir=1; }
     render();
   });
 
@@ -2106,7 +2107,11 @@ function init(){
       render(); return;
     }
     var ps=e.target.closest('[data-psort]');
-    if(ps){ S.sort=ps.dataset.psort==='team'?'team':'fdr'; S.dir=1; render(); return; }
+    if(ps){
+      var k=ps.dataset.psort==='team'?'team':'fdr';
+      if(S.planSort===k) S.planDir=-S.planDir; else { S.planSort=k; S.planDir=1; }
+      save(); render(); return;
+    }
     var shift=e.target.closest('[data-planshift]');
     if(shift && !shift.disabled){
       var d=+shift.dataset.planshift, w=planLen();
