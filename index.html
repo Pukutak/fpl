@@ -88,6 +88,9 @@ input[type=range]{width:100%;accent-color:var(--ink);margin:0}
 
 .ledger{background:var(--ink);border-color:var(--ink);color:#fff}
 .ledger h3{color:rgba(255,255,255,.5)}
+.ledger h3 .ltoggle{color:rgba(255,255,255,.55);width:auto;margin:0}
+.ledger h3 .ltoggle:hover{color:#fff}
+.ledger h3 .hcount{color:rgba(255,255,255,.5)}
 .budget{display:flex;align-items:baseline;gap:6px;font-family:var(--mono);font-weight:600;font-size:23px;letter-spacing:-.02em}
 .budget small{font-size:11px;font-weight:400;color:rgba(255,255,255,.55);letter-spacing:0}
 .budget.over{color:#FF7D9B}
@@ -316,6 +319,33 @@ tbody td.l:has(.mug){padding:3px 6px}
   text-transform:uppercase;color:#fff;margin-bottom:4px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 .sqnote{font-size:11px;color:rgba(255,255,255,.5);line-height:1.6;margin:10px 0 0}
 @media (max-width:700px){ .pcard{width:74px} .shirt{width:42px;height:42px} .prow{gap:5px} }
+.dualrange{position:relative;height:26px;margin:-2px 0 12px}
+.dualrange .track{position:absolute;top:11px;left:0;right:0;height:4px;background:var(--line);border-radius:2px}
+.dualrange .fill{position:absolute;top:11px;height:4px;background:var(--mint);border-radius:2px}
+.dualrange input[type=range]{position:absolute;left:0;top:0;width:100%;height:26px;margin:0;
+  background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+.dualrange input[type=range]:focus{outline:none}
+.dualrange input[type=range]::-webkit-slider-runnable-track{background:none;border:none;height:26px}
+.dualrange input[type=range]::-moz-range-track{background:none;border:none;height:26px}
+.dualrange input[type=range]::-webkit-slider-thumb{pointer-events:auto;-webkit-appearance:none;
+  width:16px;height:16px;margin-top:5px;border-radius:50%;background:var(--ink);border:2px solid #fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.35);cursor:grab}
+.dualrange input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;background:var(--mint)}
+.dualrange input[type=range]::-moz-range-thumb{pointer-events:auto;width:16px;height:16px;border-radius:50%;
+  background:var(--ink);border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);cursor:grab}
+.dualrange input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--mint);outline-offset:2px}
+.gwrange{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:11px}
+.gwbtn.sm{width:24px;height:24px;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.gwbtn.sm:hover:not(:disabled){background:var(--ink);color:#fff;border-color:var(--ink)}
+.gwnum{width:52px;font-family:var(--mono);font-size:12px;text-align:center;padding:4px 4px;
+  border:1px solid var(--line);border-radius:2px;background:var(--paper);color:var(--ink)}
+.gwrange .dash{font-size:11px;color:var(--ink-faint)}
+.rangelen{font-family:var(--mono);font-size:11px;color:var(--ink-soft);padding:2px 7px;
+  background:var(--paper);border-radius:2px;margin-left:2px}
+.gwrange .quick{display:flex;gap:3px;margin-left:auto;flex-wrap:wrap}
+.gwrange .chip.act{font-family:var(--sans);text-transform:none;letter-spacing:0;font-size:11px;
+  background:var(--card);border:1px solid var(--line);color:var(--ink-soft)}
+.gwrange .chip.act:hover{border-color:var(--ink);color:var(--ink)}
 .pselbar{display:flex;align-items:center;gap:3px;flex-wrap:wrap;margin:0 0 12px;padding-bottom:11px;
   border-bottom:1px solid var(--line)}
 .psl{font-family:var(--cond);font-weight:600;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
@@ -396,7 +426,8 @@ tbody td.l:has(.mug){padding:3px 6px}
       </div>
 
       <div class="panel ledger">
-        <h3>Squad ledger</h3>
+        <h3><button class="pgroup toggle ltoggle" id="ledgerToggle" aria-expanded="false" aria-controls="ledgerBody">▸ Squad ledger</button><span class="hcount" id="ledgerSum"></span></h3>
+        <div id="ledgerBody" style="display:none">
         <div class="budget" id="bud">£100.0m <small>free</small></div>
         <div class="bar"><i id="budbar" style="width:0%"></i></div>
         <div class="quota" id="quota"></div>
@@ -406,6 +437,7 @@ tbody td.l:has(.mug){padding:3px 6px}
         <div style="margin-top:8px;display:flex;gap:10px">
           <button class="linkbtn" id="copySquad">copy squad</button>
           <button class="linkbtn" id="clearSquad">clear</button>
+        </div>
         </div>
       </div>
           <div class="panel">
@@ -434,6 +466,13 @@ tbody td.l:has(.mug){padding:3px 6px}
       </div>
 
       <div class="panel">
+        <h3>Stat rules <span><button class="linkbtn" id="clearRules">clear all</button> · <button class="linkbtn" id="addRule">+ add rule</button></span></h3>
+        <p class="summary" id="ruleSummary"></p>
+        <div id="ruleList"></div>
+        <p class="note" id="ruleNote">Every rule must pass. Players with no data for a stat are excluded by that rule.</p>
+      </div>
+
+      <div class="panel">
         <h3>Filter <button class="linkbtn" id="resetAll">reset</button></h3>
         <div class="fgroup"><input type="search" id="q" placeholder="Search player or club…" aria-label="Search players"></div>
         <div class="fgroup">
@@ -447,26 +486,16 @@ tbody td.l:has(.mug){padding:3px 6px}
       </div>
 
       <div class="panel">
-        <h3>Stat rules <button class="linkbtn" id="addRule">+ add rule</button></h3>
-        <p class="summary" id="ruleSummary"></p>
-        <div id="ruleList"></div>
-        <p class="note" id="ruleNote">Every rule must pass. Players with no data for a stat are excluded by that rule.</p>
-      </div>
-
-      <div class="panel">
-        <h3>Fixture window</h3>
+        <h3>Fixture window <span style="font-family:var(--sans);text-transform:none;letter-spacing:0;font-size:10px">player table</span></h3>
         <div class="fgroup">
           <div class="flabel"><span>From</span><b id="startOut">GW1</b></div>
           <input type="range" id="startgw" min="1" max="38" step="1" value="1">
         </div>
         <div class="fgroup">
-          <div class="flabel"><span>Span — player table</span><b id="spanOut">6 GWs</b></div>
+          <div class="flabel"><span>Span</span><b id="spanOut">6 GWs</b></div>
           <input type="range" id="span" min="1" max="12" step="1" value="6">
         </div>
-        <div class="fgroup">
-          <div class="flabel"><span>Span — club planner</span><b id="pspanOut">10 GWs</b></div>
-          <input type="range" id="pspan" min="1" max="38" step="1" value="10">
-        </div>
+
       </div>
 
       <div class="panel">
@@ -553,7 +582,7 @@ D.teams.forEach(function(t){
 var LIVE=null, LIVEMETA=null, LIVEGW=null;
 
 var S={q:'',pos:new Set(),teams:new Set(),rules:[],pins:new Set(),watch:new Set(),watchOnly:false,
-  startGw:1,span:6,pspan:10,rowScale:0,showPhoto:true,apiUrl:'',formWin:6,deepGw:true,xi:new Set(),cap:null,sqGw:1,sqSel:null,planSel:new Set(),planHide:false,order:null,hidden:null,nodata:false,fit:false,sp:false,
+  startGw:1,span:6,pspan:10,planFrom:1,planTo:10,rowScale:0,showPhoto:true,ledgerOpen:false,apiUrl:'',formWin:6,deepGw:true,xi:new Set(),cap:null,sqGw:1,sqSel:null,planSel:new Set(),planHide:false,order:null,hidden:null,nodata:false,fit:false,sp:false,
   season:'hist',sort:'tp',dir:-1,tab:'players',squad:new Set(),preset:null};
 
 /* ---------- accessors ---------- */
@@ -597,7 +626,30 @@ function windowFx(id,span){
   for(var g=S.startGw;g<S.startGw+span&&g<=38;g++) out.push({gw:g,list:map[g]||[]});
   return out;
 }
-function planWin(id){ return windowFx(id,S.pspan); }
+function planWin(id){
+  var out=[], map=fxByTeam[id]||{};
+  for(var g=S.planFrom; g<=S.planTo && g<=38; g++) out.push({gw:g,list:map[g]||[]});
+  return out;
+}
+function planLen(){ return Math.max(1, S.planTo - S.planFrom + 1); }
+function setPlanFrom(v){
+  v=Math.max(1,Math.min(38,v||1));
+  var to=S.planTo;
+  if(v>to) to=Math.min(38, v + planLen() - 1);   /* push the window, don't invert it */
+  setPlanRange(v,to);
+}
+function setPlanTo(v){
+  v=Math.max(1,Math.min(38,v||1));
+  var from=S.planFrom;
+  if(v<from) from=Math.max(1, v - planLen() + 1);
+  setPlanRange(from,v);
+}
+function setPlanRange(from,to){
+  from=Math.max(1,Math.min(38,from||1));
+  to=Math.max(1,Math.min(38,to||1));
+  if(to<from){ var t=from; from=to; to=t; }
+  S.planFrom=from; S.planTo=to; save(); render();
+}
 function planAvg(id){ var s=0,n=0; planWin(id).forEach(function(x){x.list.forEach(function(f){s+=f.d;n++;});}); return n?s/n:0; }
 function planGames(id){ var n=0; planWin(id).forEach(function(x){n+=x.list.length;}); return n; }
 function planHome(id){ var n=0; planWin(id).forEach(function(x){x.list.forEach(function(f){if(f.H)n++;});}); return n; }
@@ -955,12 +1007,16 @@ function passesRules(p){
   for(var i=0;i<S.rules.length;i++){
     var r=S.rules[i], v=metricVal(p,r.m);
     if(v===null) return false;
-    if(r.op==='>='&&v<r.v) return false;
-    if(r.op==='<='&&v>r.v) return false;
+    if(r.op==='>='&&!(v>=r.v)) return false;
+    if(r.op==='>' &&!(v> r.v)) return false;
+    if(r.op==='<='&&!(v<=r.v)) return false;
+    if(r.op==='<' &&!(v< r.v)) return false;
   }
   return true;
 }
-function ruleText(r){ return (MET[r.m]?MET[r.m].t:r.m)+' '+(r.op==='>='?'≥':'≤')+' '+r.v; }
+var OPSYM={'>=':'≥','>':'>','<=':'≤','<':'<'};
+function ruleText(r){ return (MET[r.m]?MET[r.m].t:r.m)+' '+(OPSYM[r.op]||r.op)+' '+r.v; }
+function opIsLower(op){ return op==='>='||op==='>'; }
 function filterSummary(){
   var bits=[];
   if(S.pos.size) bits.push(Array.from(S.pos).sort().map(function(k){return POS[k];}).join('/'));
@@ -973,6 +1029,8 @@ function filterSummary(){
 }
 function renderRules(){
   document.getElementById('ruleSummary').textContent=filterSummary();
+  var cb=document.getElementById('clearRules');
+  if(cb) cb.style.display=S.rules.length?'':'none';
   document.getElementById('ruleList').innerHTML=S.rules.map(function(r,i){
     var d=MET[r.m], dom=domain(r.m);
     var lo=Math.min(dom.lo,r.v), hi=Math.max(dom.hi,r.v);
@@ -981,9 +1039,10 @@ function renderRules(){
         '<select class="rmet" aria-label="Stat">'+METRICS.map(function(x){
           return '<option value="'+x.k+'"'+(x.k===r.m?' selected':'')+'>'+x.t+'</option>';}).join('')+'</select>'+
         '<select class="rop" aria-label="Comparison">'+
-          '<option value="&gt;="'+(r.op==='>='?' selected':'')+'>≥</option>'+
-          '<option value="&lt;="'+(r.op==='<='?' selected':'')+'>≤</option></select>'+
-        '<input class="rval" type="number" step="'+d.step+'" value="'+r.v+'" aria-label="Threshold">'+
+          ['>=','>','<=','<'].map(function(o){
+            return '<option value="'+o.replace(/>/g,'&gt;').replace(/</g,'&lt;')+'"'+
+              (r.op===o?' selected':'')+'>'+OPSYM[o]+'</option>';}).join('')+'</select>'+
+        '<input class="rval" type="number" step="any" inputmode="decimal" value="'+r.v+'" aria-label="Threshold">'+
         '<button class="rdel" aria-label="Delete rule">✕</button>'+
       '</div>'+
       '<input class="rrange" type="range" min="'+lo+'" max="'+hi+'" step="'+d.step+'" value="'+r.v+'" aria-label="'+d.t+' threshold">'+
@@ -1094,8 +1153,15 @@ function crest(t){
   return '<span class="crest" style="--cc:'+clubColor(t)+'"><b>'+esc(t.s)+'</b>'+
     (BADGE_OK?'<img alt="" loading="lazy" referrerpolicy="no-referrer" src="'+tpl(BADGE_OK,t.code)+'">':'')+'</span>';
 }
-function renderPlanner(){
-  var n=S.pspan;
+function planSizing(){
+  var n=planLen();
+  var cw=Math.max(26,Math.min(64,Math.floor(1240/n)-4));
+  var ch=Math.max(19,Math.min(30,Math.round(cw*0.46)));
+  var fs=Math.max(8.5,Math.min(13,cw*0.2+1.5));
+  return {n:n,vars:'--cw:'+cw+'px;--ch:'+ch+'px;--cfs:'+fs.toFixed(1)+'px'};
+}
+function renderPlanGrid(){
+  var z=planSizing(), n=z.n;
   var ord=function(a,b){
     if(S.sort==='team') return a.nm.localeCompare(b.nm)*(S.dir>0?1:-1);
     return (planAvg(a.id)-planAvg(b.id))*(S.dir>0?1:-1);
@@ -1104,42 +1170,19 @@ function renderPlanner(){
   var rest=D.teams.filter(function(t){return !S.planSel.has(t.id);}).sort(ord);
   if(S.planHide && sel.length) rest=[];
   var teams=sel.concat(rest), nSel=sel.length;
-  document.getElementById('ro-count').textContent=teams.length+(nSel?' · '+nSel+' compared':'');
+  var ro=document.getElementById('ro-count');
+  if(ro) ro.textContent=teams.length+(nSel?' · '+nSel+' compared':'');
 
-  var cw=Math.max(26,Math.min(64,Math.floor(1240/n)-4));
-  var ch=Math.max(19,Math.min(30,Math.round(cw*0.46)));
-  var fs=Math.max(8.5,Math.min(13,cw*0.2+1.5));
-  var vars='--cw:'+cw+'px;--ch:'+ch+'px;--cfs:'+fs.toFixed(1)+'px';
-
-  var h='<div class="pwrap" style="'+vars+'">';
-  h+='<div class="ptools">'+
-     '<button class="chip'+(S.sort!=='team'?' on':'')+'" data-psort="fdr">Sort by fixture run</button>'+
-     '<button class="chip'+(S.sort==='team'?' on':'')+'" data-psort="team">Sort A–Z</button>'+
-     '<span class="legend"><b>Easier</b>'+[1,2,3,4,5].map(function(d){
-        return '<i style="background:'+fdrColor(d)+'"></i>';}).join('')+'<b>Harder</b></span>'+
-     '<span class="legend key"><em>ARS</em> home · <em class="aw">ars</em> away</span></div>';
-
-  h+='<div class="pselbar"><span class="psl">Compare</span>'+
-     D.teams.slice().sort(function(a,b){return a.s.localeCompare(b.s);}).map(function(t){
-       return '<button class="chip tm'+(S.planSel.has(t.id)?' on':'')+'" data-selteam="'+t.id+'"'+
-         ' aria-pressed="'+S.planSel.has(t.id)+'" title="'+esc(t.nm)+'">'+t.s+'</button>';}).join('')+
-     (S.planSel.size
-       ? '<button class="chip act" data-planhide="1" aria-pressed="'+S.planHide+'">'+(S.planHide?'Show all clubs':'Hide the rest')+'</button>'+
-         '<button class="chip act" data-planclear="1">Clear ('+S.planSel.size+')</button>'
-       : '<span class="pselhint">pick clubs to float them to the top</span>')+
-     '</div>';
-
-  h+='<div class="pgrid"><table><thead><tr><th class="cl">Club</th><th class="ca">Avg FDR</th>';
-  for(var g=S.startGw;g<S.startGw+n&&g<=38;g++) h+='<th><span class="gwh">'+g+'</span></th>';
+  var h='<div class="pgrid" style="'+z.vars+'"><table><thead><tr>'+
+    '<th class="cl">Club</th><th class="ca">Avg FDR</th>';
+  for(var g=S.planFrom;g<=S.planTo&&g<=38;g++) h+='<th><span class="gwh">'+g+'</span></th>';
   h+='</tr></thead><tbody>';
-
   teams.forEach(function(t,ti){
-    var av=planAvg(t.id), isSel=S.planSel.has(t.id);
-    var dim=(nSel && !isSel);
-    if(nSel && ti===nSel) h+='<tr class="selsplit"><td colspan="'+(n+4)+'"></td></tr>';
+    var av=planAvg(t.id), isSel=S.planSel.has(t.id), dim=(nSel&&!isSel);
+    if(nSel&&ti===nSel) h+='<tr class="selsplit"><td colspan="'+(n+2)+'"></td></tr>';
     h+='<tr class="'+(isSel?'selrow':'')+(dim?' dimrow':'')+'">'+
-       '<td class="cl" data-selteam="'+t.id+'" title="Click to compare"><span class="clubcell">'+crest(t)+'<span class="ctext">'+
-       '<span class="tname">'+esc(t.nm)+'</span>'+
+       '<td class="cl" data-selteam="'+t.id+'" title="Click to compare"><span class="clubcell">'+crest(t)+
+       '<span class="ctext"><span class="tname">'+esc(t.nm)+'</span>'+
        '<span class="tmeta">'+planGames(t.id)+' games · '+planHome(t.id)+' home</span></span></span></td>'+
        '<td class="ca"><span class="avg" style="background:'+fdrColor(av)+';color:'+fdrInk(av)+'">'+
        (av?av.toFixed(2):'—')+'</span></td>';
@@ -1154,8 +1197,71 @@ function renderPlanner(){
     });
     h+='</tr>';
   });
-  h+='</tbody></table></div></div>';
+  h+='</tbody></table></div>';
+  var host=document.getElementById('planGrid');
+  if(host) host.innerHTML=h;
+}
+function planPct(v){ return ((v-1)/37*100).toFixed(2)+'%'; }
+function syncPlanControls(){
+  var lo=document.querySelector('[data-planlo]'), hi=document.querySelector('[data-planhi]');
+  if(lo) lo.value=S.planFrom;
+  if(hi) hi.value=S.planTo;
+  var f=document.querySelector('[data-planfrom]'), t=document.querySelector('[data-planto]');
+  if(f&&document.activeElement!==f) f.value=S.planFrom;
+  if(t&&document.activeElement!==t) t.value=S.planTo;
+  var fill=document.querySelector('.dualrange .fill');
+  if(fill){ fill.style.left=planPct(S.planFrom); fill.style.right=(100-parseFloat(planPct(S.planTo)))+'%'; }
+  var len=document.querySelector('.rangelen');
+  if(len) len.textContent=planLen()+' GW'+(planLen()>1?'s':'');
+  var back=document.querySelector('[data-planshift="-1"]'), fwd=document.querySelector('[data-planshift="1"]');
+  if(back) back.disabled=(S.planFrom<=1);
+  if(fwd) fwd.disabled=(S.planTo>=38);
+}
+function renderPlanner(){
+  var nowGw=LIVEGW||1, n=planLen();
+  var h='<div class="pwrap" style="'+planSizing().vars+'">';
+  h+='<div class="ptools">'+
+     '<button class="chip'+(S.sort!=='team'?' on':'')+'" data-psort="fdr">Sort by fixture run</button>'+
+     '<button class="chip'+(S.sort==='team'?' on':'')+'" data-psort="team">Sort A–Z</button>'+
+     '<span class="legend"><b>Easier</b>'+[1,2,3,4,5].map(function(d){
+        return '<i style="background:'+fdrColor(d)+'"></i>';}).join('')+'<b>Harder</b></span>'+
+     '<span class="legend key"><em>ARS</em> home · <em class="aw">ars</em> away</span></div>';
+
+  h+='<div class="gwrange">'+
+     '<span class="psl">Gameweeks</span>'+
+     '<button class="gwbtn sm" data-planshift="-1" title="Shift window back"'+(S.planFrom<=1?' disabled':'')+'>‹</button>'+
+     '<input class="gwnum" type="number" min="1" max="38" step="1" value="'+S.planFrom+'" data-planfrom aria-label="First gameweek">'+
+     '<span class="dash">to</span>'+
+     '<input class="gwnum" type="number" min="1" max="38" step="1" value="'+S.planTo+'" data-planto aria-label="Last gameweek">'+
+     '<button class="gwbtn sm" data-planshift="1" title="Shift window forward"'+(S.planTo>=38?' disabled':'')+'>›</button>'+
+     '<span class="rangelen">'+n+' GW'+(n>1?'s':'')+'</span>'+
+     '<span class="quick">'+
+       '<button class="chip act" data-planset="'+nowGw+','+Math.min(38,nowGw+4)+'">Next 5</button>'+
+       '<button class="chip act" data-planset="'+nowGw+','+Math.min(38,nowGw+9)+'">Next 10</button>'+
+       (nowGw>1 ? '<button class="chip act" data-planset="'+nowGw+',38">Rest of season</button>' : '')+
+       '<button class="chip act" data-planset="1,38">Full season</button>'+
+     '</span></div>';
+
+  h+='<div class="dualrange">'+
+       '<div class="track"></div>'+
+       '<div class="fill" style="left:'+planPct(S.planFrom)+';right:'+(100-parseFloat(planPct(S.planTo)))+'%"></div>'+
+       '<input type="range" min="1" max="38" step="1" value="'+S.planFrom+'" data-planlo aria-label="First gameweek">'+
+       '<input type="range" min="1" max="38" step="1" value="'+S.planTo+'" data-planhi aria-label="Last gameweek">'+
+     '</div>';
+
+  h+='<div class="pselbar"><span class="psl">Compare</span>'+
+     D.teams.slice().sort(function(a,b){return a.s.localeCompare(b.s);}).map(function(t){
+       return '<button class="chip tm'+(S.planSel.has(t.id)?' on':'')+'" data-selteam="'+t.id+'"'+
+         ' aria-pressed="'+S.planSel.has(t.id)+'" title="'+esc(t.nm)+'">'+t.s+'</button>';}).join('')+
+     (S.planSel.size
+       ? '<button class="chip act" data-planhide="1" aria-pressed="'+S.planHide+'">'+(S.planHide?'Show all clubs':'Hide the rest')+'</button>'+
+         '<button class="chip act" data-planclear="1">Clear ('+S.planSel.size+')</button>'
+       : '<span class="pselhint">pick clubs to float them to the top</span>')+
+     '</div>';
+
+  h+='<div id="planGrid"></div></div>';
   document.getElementById('sheet').innerHTML=h;
+  renderPlanGrid();
 }
 function render(){
   var RP=[5,8,11,14,17], RF=[12,12.5,13,13.5,14], MU=[30,34,39,44,49],
@@ -1382,6 +1488,13 @@ function sqClick(code){
 
 /* ---------- ledger ---------- */
 function squadList(){ var o=[]; D.players.forEach(function(p){if(S.squad.has(p.c))o.push(p);}); return o.sort(function(a,b){return posOf(a)-posOf(b)||price(b)-price(a);}); }
+function applyLedgerFold(){
+  var body=document.getElementById('ledgerBody'), btn=document.getElementById('ledgerToggle');
+  if(!body||!btn) return;
+  body.style.display=S.ledgerOpen?'':'none';
+  btn.setAttribute('aria-expanded',S.ledgerOpen?'true':'false');
+  btn.textContent=(S.ledgerOpen?'▾':'▸')+' Squad ledger';
+}
 function renderWatch(){
   var list=D.players.filter(function(p){return S.watch.has(p.c);})
     .sort(function(a,b){return posOf(a)-posOf(b)||price(b)-price(a);});
@@ -1425,6 +1538,8 @@ function renderLedger(){
   if(list.length===15&&!msgs.length) msgs.push('Valid 15 · '+proj+' pts on current stats season.');
   else if(list.length) msgs.push(list.length+'/15 picked · '+proj+' pts.');
   document.getElementById('warn').textContent=msgs.join(' ');
+  var sum=document.getElementById('ledgerSum');
+  if(sum) sum.textContent=list.length?(list.length+'/15 · £'+(left/10).toFixed(1)+'m'):'empty';
   save();
 }
 function toggleSquad(c){
@@ -1612,7 +1727,9 @@ function ingestCSV(pl,fx,tm){
       if(fxByTeam[h]) (fxByTeam[h][ev]=fxByTeam[h][ev]||[]).push({gw:ev,o:short[a]||'?',H:1,d:n(f.team_h_difficulty)});
       if(fxByTeam[a]) (fxByTeam[a][ev]=fxByTeam[a][ev]||[]).push({gw:ev,o:short[h]||'?',H:0,d:n(f.team_a_difficulty)});
     });
-    if(next){ LIVEGW=next; S.startGw=Math.min(38,next); S.sqGw=Math.min(38,next); }
+    if(next){ LIVEGW=next; S.startGw=Math.min(38,next); S.sqGw=Math.min(38,next);
+        var w=Math.max(1,S.planTo-S.planFrom+1);
+        S.planFrom=Math.min(38,next); S.planTo=Math.min(38,S.planFrom+w-1); }
   }
   DOMAIN={};
   var played=0; pl.forEach(function(e){ played+=n(e.minutes); });
@@ -1830,7 +1947,7 @@ var STORE=(function(){
 function save(){
   STORE.set('fpl:v2',JSON.stringify({
     squad:Array.from(S.squad),custom:CUSTOM,pins:Array.from(S.pins),watch:Array.from(S.watch),
-    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,rowScale:S.rowScale,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw}));
+    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,planFrom:S.planFrom,planTo:S.planTo,rowScale:S.rowScale,ledgerOpen:S.ledgerOpen,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw}));
 }
 function load(){
   return STORE.get('fpl:v2').then(function(raw){
@@ -1843,7 +1960,10 @@ function load(){
     CUSTOM=o.custom||[];
     CUSTOMLAYOUTS=o.layouts||[];
     if(o.pspan) S.pspan=o.pspan;
+    if(o.planFrom) S.planFrom=o.planFrom;
+    if(o.planTo) S.planTo=o.planTo;
     if(o.rowScale) S.rowScale=o.rowScale;
+    if(o.ledgerOpen===true) S.ledgerOpen=true;
     (o.planSel||[]).forEach(function(t){S.planSel.add(t);});
     if(o.planHide) S.planHide=true;
     if(o.showPhoto===false) S.showPhoto=false;
@@ -1868,7 +1988,6 @@ function syncControls(){
   document.getElementById('q').value=S.q;
   document.getElementById('startgw').value=S.startGw;
   document.getElementById('span').value=S.span;
-  document.getElementById('pspan').value=S.pspan;
   document.getElementById('rowsize').value=S.rowScale;
   document.getElementById('formwin').value=S.formWin;
   document.getElementById('apiUrl').value=S.apiUrl||'';
@@ -1883,7 +2002,6 @@ function syncControls(){
 function labels(){
   document.getElementById('startOut').textContent='GW'+S.startGw;
   document.getElementById('spanOut').textContent=S.span+' GW'+(S.span>1?'s':'');
-  document.getElementById('pspanOut').textContent=S.pspan+' GW'+(S.pspan>1?'s':'');
   document.getElementById('fwOut').textContent=S.formWin+' GW'+(S.formWin>1?'s':'');
   document.getElementById('rowOut').textContent=['Compact','Small','Medium','Large','Largest'][S.rowScale];
 }
@@ -1915,12 +2033,18 @@ function init(){
   on('q','input',function(){ S.q=this.value.trim(); render(); });
   on('startgw','input',function(){ S.startGw=+this.value; labels(); DOMAIN={}; render(); });
   on('span','input',function(){ S.span=+this.value; labels(); DOMAIN={}; render(); });
-  on('pspan','input',function(){ S.pspan=+this.value; labels(); render(); });
   on('rowsize','input',function(){ S.rowScale=+this.value; labels(); save(); render(); });
   on('formwin','input',function(){ S.formWin=+this.value; labels(); applyGw(); save(); render(); });
   sw('t-deep','deepGw');
 
   on('addRule','click',function(){ addRule(); });
+  on('clearRules','click',function(){
+    if(!S.rules.length) return;
+    S.rules=[]; S.preset=null;
+    renderPresets(); renderRules(); render();
+    var n=document.getElementById('ruleNote');
+    if(n) n.textContent='All rules cleared. Position, club and search filters are untouched.';
+  });
   var ruleList=document.getElementById('ruleList');
   ruleList.addEventListener('change',function(e){
     var box=e.target.closest('.rule'); if(!box) return;
@@ -1928,22 +2052,34 @@ function init(){
     if(e.target.classList.contains('rmet')){
       r.m=e.target.value;
       var dom=domain(r.m);
-      r.v=+(r.op==='>='?dom.lo:dom.hi).toFixed(MET[r.m].dp);
+      r.v=+(opIsLower(r.op)?dom.lo:dom.hi).toFixed(MET[r.m].dp);
       renderRules();
-    } else if(e.target.classList.contains('rop')){ r.op=e.target.value; }
+    } else if(e.target.classList.contains('rop')){ r.op=e.target.value; renderRules(); }
     S.preset=null; renderPresets(); renderRules(); render();
   });
   ruleList.addEventListener('input',function(e){
     var box=e.target.closest('.rule'); if(!box) return;
     var i=+box.dataset.i, r=S.rules[i]; if(!r) return;
-    if(e.target.classList.contains('rval')||e.target.classList.contains('rrange')){
+    var isBox=e.target.classList.contains('rval');
+    var isSlider=e.target.classList.contains('rrange');
+    if(!isBox&&!isSlider) return;
+    if(isBox){
+      var raw=e.target.value;
+      /* mid-typing states: let them finish rather than rewriting the field */
+      if(raw===''||raw==='-'||raw==='.'||raw==='-.'||raw.charAt(raw.length-1)==='.') return;
+      var n=parseFloat(raw);
+      if(isNaN(n)) return;
+      r.v=n;
+      var sl=box.querySelector('.rrange');
+      if(sl) sl.value=r.v;
+    } else {
       r.v=+e.target.value;
-      box.querySelector('.rval').value=r.v;
-      box.querySelector('.rrange').value=r.v;
-      S.preset=null; renderPresets();
-      document.getElementById('ruleSummary').textContent=filterSummary();
-      render();
+      var bx=box.querySelector('.rval');
+      if(bx) bx.value=r.v;
     }
+    S.preset=null; renderPresets();
+    document.getElementById('ruleSummary').textContent=filterSummary();
+    render();
   });
   ruleList.addEventListener('click',function(e){
     if(!e.target.classList.contains('rdel')) return;
@@ -1971,6 +2107,16 @@ function init(){
     }
     var ps=e.target.closest('[data-psort]');
     if(ps){ S.sort=ps.dataset.psort==='team'?'team':'fdr'; S.dir=1; render(); return; }
+    var shift=e.target.closest('[data-planshift]');
+    if(shift && !shift.disabled){
+      var d=+shift.dataset.planshift, w=planLen();
+      var nf=S.planFrom+d;
+      if(nf<1) nf=1;
+      if(nf+w-1>38) nf=38-w+1;
+      setPlanRange(nf,nf+w-1); return;
+    }
+    var pset=e.target.closest('[data-planset]');
+    if(pset){ var q=pset.dataset.planset.split(','); setPlanRange(+q[0],+q[1]); return; }
     var st=e.target.closest('[data-selteam]');
     if(st){ var ti=+st.dataset.selteam;
       S.planSel.has(ti)?S.planSel.delete(ti):S.planSel.add(ti);
@@ -1991,6 +2137,27 @@ function init(){
     var wt=e.target.closest('[data-watch]');
     if(wt){ var wc=+wt.dataset.watch; S.watch.has(wc)?S.watch.delete(wc):S.watch.add(wc); save(); render(); return; }
     var a=e.target.closest('[data-add]'); if(a) toggleSquad(+a.dataset.add);
+  });
+  document.getElementById('sheet').addEventListener('change',function(e){
+    var f=e.target.closest('[data-planfrom]'), t=e.target.closest('[data-planto]');
+    if(f){ setPlanFrom(+f.value); return; }
+    if(t){ setPlanTo(+t.value); return; }
+  });
+  document.getElementById('sheet').addEventListener('input',function(e){
+    var lo=e.target.closest('[data-planlo]'), hi=e.target.closest('[data-planhi]');
+    if(!lo&&!hi) return;
+    if(lo){
+      var v=Math.min(+lo.value, S.planTo);   /* thumbs cannot cross */
+      lo.value=v; S.planFrom=v;
+    } else {
+      var v2=Math.max(+hi.value, S.planFrom);
+      hi.value=v2; S.planTo=v2;
+    }
+    syncPlanControls();
+    renderPlanGrid();          /* grid only - the slider under the cursor survives */
+  });
+  document.getElementById('sheet').addEventListener('change',function(e){
+    if(e.target.closest('[data-planlo]')||e.target.closest('[data-planhi]')) save();
   });
   document.getElementById('sheet').addEventListener('keydown',function(e){
     if(e.key!=='Enter'&&e.key!==' ') return;
@@ -2024,6 +2191,11 @@ function init(){
     navigator.clipboard.writeText(txt).then(function(){
       note.style.display=''; note.textContent='Copied '+list.length+' players.';
     },function(){ note.style.display=''; note.textContent='Copy blocked by the browser.'; });
+  });
+  on('ledgerToggle','click',function(){
+    S.ledgerOpen=!S.ledgerOpen;
+    applyLedgerFold();
+    save();
   });
   on('clearSquad','click',function(){ S.squad.clear(); render(); });
   on('copySquad','click',function(){
@@ -2216,7 +2388,7 @@ function init(){
   S.hidden=new Set(DEFAULT_HIDDEN);
   syncControls();
   var done=function(){
-    syncControls();
+    syncControls(); applyLedgerFold();
     renderPresets(); renderColList(); renderRules(); render();
     var sample=(D.players[0]||{}).c, tsample=(D.teams[0]||{}).code;
     Promise.all([probe(MUG_T,sample),probe(BADGE_T,tsample),probeRaw(SHIRT_T)]).then(function(r){
