@@ -255,6 +255,15 @@ tbody td.l:has(.mug){padding:3px 6px}
 .pgrid th.ca,.pgrid td.ca{position:sticky;left:132px;z-index:4;background:var(--card)}
 .pgrid th.ca{z-index:5}
 .gwh{display:block;width:var(--cw)}
+.pgrid th.gwhead{cursor:pointer;border-radius:2px 2px 0 0;transition:none}
+.pgrid th.gwhead:hover .gwh{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.pgrid th.gwhead.muted .gwh{color:var(--ink-faint);opacity:.5;text-decoration:line-through}
+.pgrid td.mutedcell{width:14px}
+.cell.hidden-gw{width:8px;height:var(--ch);border-radius:2px;background:var(--line-soft);
+  box-shadow:none;opacity:.6}
+.rangelen.partial{background:var(--amber-bg);color:var(--amber)}
+.mutenote{font-size:11px;color:var(--amber);margin-left:2px}
+.mutenote .linkbtn{color:var(--amber)}
 .pgrid td{padding:0;border:0;vertical-align:middle;white-space:nowrap;font-size:initial}
 /* team builder */
 .sqwrap{padding:14px;background:#160E28;border-radius:4px}
@@ -582,7 +591,7 @@ D.teams.forEach(function(t){
 var LIVE=null, LIVEMETA=null, LIVEGW=null;
 
 var S={q:'',pos:new Set(),teams:new Set(),rules:[],pins:new Set(),watch:new Set(),watchOnly:false,
-  startGw:1,span:6,pspan:10,planFrom:1,planTo:10,rowScale:0,showPhoto:true,ledgerOpen:false,apiUrl:'',formWin:6,deepGw:true,xi:new Set(),cap:null,sqGw:1,sqSel:null,planSel:new Set(),planHide:false,planSort:'fdr',planDir:1,order:null,hidden:null,nodata:false,fit:false,sp:false,
+  startGw:1,span:6,pspan:10,planFrom:1,planTo:10,rowScale:0,showPhoto:true,ledgerOpen:false,apiUrl:'',formWin:6,deepGw:true,xi:new Set(),cap:null,sqGw:1,sqSel:null,planSel:new Set(),planHide:false,planSort:'fdr',planDir:1,planMuted:new Set(),order:null,hidden:null,nodata:false,fit:false,sp:false,
   season:'hist',sort:'tp',dir:-1,tab:'players',squad:new Set(),preset:null};
 
 /* ---------- accessors ---------- */
@@ -650,9 +659,15 @@ function setPlanRange(from,to){
   if(to<from){ var t=from; from=to; to=t; }
   S.planFrom=from; S.planTo=to; save(); render();
 }
-function planAvg(id){ var s=0,n=0; planWin(id).forEach(function(x){x.list.forEach(function(f){s+=f.d;n++;});}); return n?s/n:0; }
-function planGames(id){ var n=0; planWin(id).forEach(function(x){n+=x.list.length;}); return n; }
-function planHome(id){ var n=0; planWin(id).forEach(function(x){x.list.forEach(function(f){if(f.H)n++;});}); return n; }
+function planLive(id){ return planWin(id).filter(function(x){ return !S.planMuted.has(x.gw); }); }
+function planAvg(id){ var s=0,n=0; planLive(id).forEach(function(x){x.list.forEach(function(f){s+=f.d;n++;});}); return n?s/n:0; }
+function planGames(id){ var n=0; planLive(id).forEach(function(x){n+=x.list.length;}); return n; }
+function planHome(id){ var n=0; planLive(id).forEach(function(x){x.list.forEach(function(f){if(f.H)n++;});}); return n; }
+function activeGws(){
+  var n=0;
+  for(var g=S.planFrom;g<=S.planTo&&g<=38;g++) if(!S.planMuted.has(g)) n++;
+  return n;
+}
 var FSTOPS=[[23,166,115],[127,211,166],[214,214,222],[239,131,149],[179,29,69]];
 function fdrColor(v){
   if(!v) return 'var(--line-soft)';
@@ -1175,7 +1190,12 @@ function renderPlanGrid(){
 
   var h='<div class="pgrid" style="'+z.vars+'"><table><thead><tr>'+
     '<th class="cl">Club</th><th class="ca">Avg FDR</th>';
-  for(var g=S.planFrom;g<=S.planTo&&g<=38;g++) h+='<th><span class="gwh">'+g+'</span></th>';
+  for(var g=S.planFrom;g<=S.planTo&&g<=38;g++){
+    var mu=S.planMuted.has(g);
+    h+='<th class="gwhead'+(mu?' muted':'')+'" data-mutegw="'+g+'" tabindex="0" role="button"'+
+       ' title="'+(mu?'GW'+g+' hidden — click to show':'Click to hide GW'+g+' from the view and the average')+'">'+
+       '<span class="gwh">'+g+'</span></th>';
+  }
   h+='</tr></thead><tbody>';
   teams.forEach(function(t,ti){
     var av=planAvg(t.id), isSel=S.planSel.has(t.id), dim=(nSel&&!isSel);
@@ -1187,6 +1207,7 @@ function renderPlanGrid(){
        '<td class="ca"><span class="avg" style="background:'+fdrColor(av)+';color:'+fdrInk(av)+'">'+
        (av?av.toFixed(2):'—')+'</span></td>';
     planWin(t.id).forEach(function(x){
+      if(S.planMuted.has(x.gw)){ h+='<td class="mutedcell"><div class="cell hidden-gw"></div></td>'; return; }
       if(!x.list.length){ h+='<td><div class="cell blankc" title="Blank GW'+x.gw+'">—</div></td>'; return; }
       h+='<td>'+x.list.map(function(f){
         return '<div class="cell'+(f.H?'':' away')+(x.list.length>1?' dbl':'')+
@@ -1212,7 +1233,24 @@ function syncPlanControls(){
   var fill=document.querySelector('.dualrange .fill');
   if(fill){ fill.style.left=planPct(S.planFrom); fill.style.right=(100-parseFloat(planPct(S.planTo)))+'%'; }
   var len=document.querySelector('.rangelen');
-  if(len) len.textContent=planLen()+' GW'+(planLen()>1?'s':'');
+  if(len){
+    var act=activeGws(), tot=planLen();
+    len.textContent=(act===tot? tot+' GW'+(tot>1?'s':'')
+      : act+' of '+tot+' counted');
+    len.className='rangelen'+(act===tot?'':' partial');
+  }
+  var mn=document.querySelector('.mutenote');
+  if(mn){
+    var hidden=tot0();
+    mn.style.display=hidden?'':'none';
+    mn.innerHTML=hidden+' gameweek'+(hidden===1?'':'s')+' hidden — '+
+      '<button class="linkbtn" data-unmuteall="1">show all</button>';
+  }
+  function tot0(){
+    var c=0;
+    for(var g=S.planFrom;g<=S.planTo&&g<=38;g++) if(S.planMuted.has(g)) c++;
+    return c;
+  }
   var back=document.querySelector('[data-planshift="-1"]'), fwd=document.querySelector('[data-planshift="1"]');
   if(back) back.disabled=(S.planFrom<=1);
   if(fwd) fwd.disabled=(S.planTo>=38);
@@ -1235,6 +1273,7 @@ function renderPlanner(){
      '<input class="gwnum" type="number" min="1" max="38" step="1" value="'+S.planTo+'" data-planto aria-label="Last gameweek">'+
      '<button class="gwbtn sm" data-planshift="1" title="Shift window forward"'+(S.planTo>=38?' disabled':'')+'>›</button>'+
      '<span class="rangelen">'+n+' GW'+(n>1?'s':'')+'</span>'+
+     '<span class="mutenote" style="display:none"></span>'+
      '<span class="quick">'+
        '<button class="chip act" data-planset="'+nowGw+','+Math.min(38,nowGw+4)+'">Next 5</button>'+
        '<button class="chip act" data-planset="'+nowGw+','+Math.min(38,nowGw+9)+'">Next 10</button>'+
@@ -1947,7 +1986,7 @@ var STORE=(function(){
 function save(){
   STORE.set('fpl:v2',JSON.stringify({
     squad:Array.from(S.squad),custom:CUSTOM,pins:Array.from(S.pins),watch:Array.from(S.watch),
-    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,planFrom:S.planFrom,planTo:S.planTo,planSort:S.planSort,planDir:S.planDir,rowScale:S.rowScale,ledgerOpen:S.ledgerOpen,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw}));
+    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,planFrom:S.planFrom,planTo:S.planTo,planSort:S.planSort,planDir:S.planDir,planMuted:Array.from(S.planMuted),rowScale:S.rowScale,ledgerOpen:S.ledgerOpen,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw}));
 }
 function load(){
   return STORE.get('fpl:v2').then(function(raw){
@@ -1963,6 +2002,7 @@ function load(){
     if(o.planFrom) S.planFrom=o.planFrom;
     if(o.planTo) S.planTo=o.planTo;
     if(o.planSort) S.planSort=o.planSort;
+    (o.planMuted||[]).forEach(function(g){S.planMuted.add(g);});
     if(o.planDir) S.planDir=o.planDir;
     if(o.rowScale) S.rowScale=o.rowScale;
     if(o.ledgerOpen===true) S.ledgerOpen=true;
@@ -2112,6 +2152,14 @@ function init(){
       if(S.planSort===k) S.planDir=-S.planDir; else { S.planSort=k; S.planDir=1; }
       save(); render(); return;
     }
+    var mg=e.target.closest('[data-mutegw]');
+    if(mg){
+      var g=+mg.dataset.mutegw;
+      S.planMuted.has(g)?S.planMuted.delete(g):S.planMuted.add(g);
+      save(); syncPlanControls(); renderPlanGrid(); return;
+    }
+    var unmute=e.target.closest('[data-unmuteall]');
+    if(unmute){ S.planMuted.clear(); save(); syncPlanControls(); renderPlanGrid(); return; }
     var shift=e.target.closest('[data-planshift]');
     if(shift && !shift.disabled){
       var d=+shift.dataset.planshift, w=planLen();
@@ -2166,6 +2214,7 @@ function init(){
   });
   document.getElementById('sheet').addEventListener('keydown',function(e){
     if(e.key!=='Enter'&&e.key!==' ') return;
+    var mg=e.target.closest('th[data-mutegw]'); if(mg){ e.preventDefault(); mg.click(); return; }
     var th=e.target.closest('th[data-sort]'); if(th){ e.preventDefault(); th.click(); }
   });
   document.getElementById('picks').addEventListener('click',function(e){
