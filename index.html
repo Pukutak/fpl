@@ -106,6 +106,20 @@ input[type=range]{width:100%;accent-color:var(--ink);margin:0}
 .picks li b{font-family:var(--mono);font-weight:500;color:rgba(255,255,255,.6);font-size:11px;width:26px;flex:none}
 .picks li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .picks li em{font-family:var(--mono);font-style:normal;font-size:11px;color:rgba(255,255,255,.75)}
+.picks li em.up{color:#00E58C;font-size:9px}
+.picks li em.down{color:#FF7D9B;font-size:9px}
+.money{margin-bottom:9px}
+.mrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0;font-size:11.5px;
+  color:rgba(255,255,255,.6);border-top:1px solid rgba(255,255,255,.09)}
+.mrow:first-child{border-top:0}
+.mrow b{font-family:var(--mono);font-weight:600;color:#fff;font-size:12px}
+.mrow.tot b{color:#00E58C}
+.mrow.up b{color:#00E58C} .mrow.down b{color:#FF7D9B}
+.mrow.ok b{color:#00E58C} .mrow.bad b{color:#FF7D9B}
+.mrow.sub b{color:rgba(255,255,255,.6);font-size:11px}
+#bankIn{width:58px;font-family:var(--mono);font-size:12px;text-align:right;padding:2px 4px;
+  border:1px solid rgba(255,255,255,.28);border-radius:2px;background:rgba(255,255,255,.08);color:#fff}
+.mrow .mu{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);margin-left:2px}
 .picks li button{background:none;border:0;color:rgba(255,255,255,.4);padding:0 2px;line-height:1}
 .warn{font-size:11px;color:#FFC98A;margin:7px 0 0;line-height:1.45}
 .empty-note{font-size:11px;color:rgba(255,255,255,.5);line-height:1.5;margin:0}
@@ -321,6 +335,49 @@ tbody td.l:has(.mug){padding:3px 6px}
 .pcf.d1{background:var(--f1);color:#fff} .pcf.d2{background:var(--f2)} .pcf.d3{background:#E3E3E9}
 .pcf.d4{background:var(--f4)} .pcf.d5{background:var(--f5);color:#fff}
 
+.valbox,.budbox{font-family:var(--cond);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.55);display:flex;align-items:center;gap:5px}
+.valbox b{font-family:var(--mono);font-size:14px;color:#fff;letter-spacing:0}
+.valbox.bad b{color:#FF7D9B}
+.budin{width:56px;font-family:var(--mono);font-size:12px;text-align:right;padding:3px 4px;
+  border:1px solid rgba(255,255,255,.28);border-radius:2px;background:rgba(255,255,255,.08);color:#fff}
+.bunit{color:rgba(255,255,255,.45);margin-left:-3px}
+.budbox em{font-family:var(--mono);font-style:normal;font-size:11px;letter-spacing:0;color:#00E58C}
+.budbox.bad em{color:#FF7D9B}
+.auditbar{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:9px 11px;
+  background:rgba(255,125,155,.12);border:1px solid rgba(255,125,155,.45);border-radius:4px}
+.alab{font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:#FF7D9B;flex:none;padding-top:1px}
+.alist{list-style:none;margin:0;padding:0;flex:1;min-width:180px}
+.alist li{font-size:11.5px;color:rgba(255,255,255,.8);line-height:1.55}
+.alist li b{color:#FF7D9B}
+.anote{font-size:11px;color:rgba(255,255,255,.4);flex:none}
+.trialbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding:9px 11px;
+  background:rgba(255,201,138,.12);border:1px dashed rgba(255,201,138,.55);border-radius:4px}
+.tlab{font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#FFC98A}
+.tswap{font-size:11.5px;color:#fff;background:rgba(255,255,255,.09);padding:3px 4px 3px 8px;border-radius:2px}
+.tswap b{color:#FFC98A;font-weight:700}
+.tx{border:0;background:none;color:rgba(255,255,255,.45);font-size:10px;padding:0 3px}
+.tx:hover{color:#FF7D9B}
+.tacts{margin-left:auto;display:flex;gap:5px}
+.trialbar .chip.act{font-family:var(--sans);text-transform:none;letter-spacing:0;font-size:11px;
+  background:#FFC98A;border-color:#FFC98A;color:#2A1B08;font-weight:600}
+.trialbar .chip.act[data-cleartrials]{background:transparent;border-color:rgba(255,255,255,.3);color:#fff}
+.pcard.trial .plate{outline:2px dashed #FFC98A}
+.pcard.trial .pcn{background:#FFF6E6}
+.inbadge{position:absolute;top:-3px;left:-2px;z-index:3;font-family:var(--cond);font-weight:700;font-size:9px;
+  letter-spacing:.08em;background:#FFC98A;color:#2A1B08;padding:1px 4px;border-radius:2px}
+.pcard{position:relative}
+.traybox{margin-top:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);
+  border-radius:4px;padding:10px}
+.traylab{width:100%;text-align:left;background:none;border:0;padding:0 0 2px;
+  font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.62)}
+.traylab:hover{color:#fff}
+.prow.tray{margin-top:10px;margin-bottom:0;justify-content:flex-start}
+.prow.tray .pcn{color:var(--ink)}
+.traynote{font-size:11px;color:rgba(255,255,255,.45);line-height:1.55;margin:8px 0 0}
+.sqmsg{font-size:11.5px;color:#FFC98A;margin:10px 0 0}
 .benchbox{margin-top:12px;background:linear-gradient(180deg,#0BA850,#0A9A48);border-radius:5px;padding:14px 10px 8px}
 .benchlab{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.16em;text-transform:uppercase;
   color:rgba(255,255,255,.85);margin-top:8px;text-align:center}
@@ -439,6 +496,7 @@ tbody td.l:has(.mug){padding:3px 6px}
         <div id="ledgerBody" style="display:none">
         <div class="budget" id="bud">£100.0m <small>free</small></div>
         <div class="bar"><i id="budbar" style="width:0%"></i></div>
+        <div id="moneyRows" class="money"></div>
         <div class="quota" id="quota"></div>
         <ul class="picks" id="picks"></ul>
         <p class="empty-note" id="pickNote">Tap <b>+</b> on any row to build a 15-man squad. Budget £100.0m, max 3 per club.</p>
@@ -591,7 +649,7 @@ D.teams.forEach(function(t){
 var LIVE=null, LIVEMETA=null, LIVEGW=null;
 
 var S={q:'',pos:new Set(),teams:new Set(),rules:[],pins:new Set(),watch:new Set(),watchOnly:false,
-  startGw:1,span:6,pspan:10,planFrom:1,planTo:10,rowScale:0,showPhoto:true,ledgerOpen:false,apiUrl:'',formWin:6,deepGw:true,xi:new Set(),cap:null,sqGw:1,sqSel:null,planSel:new Set(),planHide:false,planSort:'fdr',planDir:1,planMuted:new Set(),order:null,hidden:null,nodata:false,fit:false,sp:false,
+  startGw:1,span:6,pspan:10,planFrom:1,planTo:10,rowScale:0,showPhoto:true,ledgerOpen:false,apiUrl:'',formWin:6,deepGw:true,xi:new Set(),cap:null,sqGw:1,sqSel:null,trial:{},trialOpen:true,sqMsg:'',budget:1000,bank:0,buy:{},planSel:new Set(),planHide:false,planSort:'fdr',planDir:1,planMuted:new Set(),order:null,hidden:null,nodata:false,fit:false,sp:false,
   season:'hist',sort:'tp',dir:-1,tab:'players',squad:new Set(),preset:null};
 
 /* ---------- accessors ---------- */
@@ -1377,7 +1435,100 @@ function addBlockedBy(p){
   if(S.squad.size>=15) return 'Squad is full at 15. Remove someone first.';
   return null;
 }
+function buyPrice(p){
+  var b=S.buy&&S.buy[p.c];
+  return (b===undefined||b===null)?price(p):b;
+}
+/* FPL returns the purchase price plus half of any rise, rounded down to 0.1.
+   Falls are absorbed in full, so a drop sells at the current price. */
+function sellPrice(p){
+  var cur=price(p), buy=buyPrice(p);
+  if(cur<=buy) return cur;
+  return buy + Math.floor((cur-buy)/2);
+}
+function squadValue(){                     /* what the squad would fetch */
+  return squad15().reduce(function(a,p){return a+sellPrice(p);},0);
+}
+function squadCost(){                      /* what it cost to assemble */
+  return squad15().reduce(function(a,p){return a+buyPrice(p);},0);
+}
+function squadMarket(){                    /* current listed prices */
+  return squad15().reduce(function(a,p){return a+price(p);},0);
+}
+function trialNet(){                       /* cash movement if every trial commits */
+  var net=0;
+  trialIn().forEach(function(c){
+    var inP=byCode(c), outP=byCode(S.trial[c]);
+    if(inP) net+=price(inP);
+    if(outP) net-=sellPrice(outP);
+  });
+  return net;
+}
+function clubTally(list){
+  var m={}; list.forEach(function(p){ var t=teamOf(p); m[t]=(m[t]||0)+1; });
+  return m;
+}
 function squad15(){ return D.players.filter(function(p){return S.squad.has(p.c);}); }
+/* FPL selling rule: a rise returns only half, rounded down to 0.1;
+   a fall is taken in full. Purchase price must be entered by hand - it lives
+   behind an authenticated endpoint a static page cannot reach. */
+function buyOf(p){ var b=S.buy[p.c]; return (b===undefined||b===null)?price(p):b; }
+function sellOf(p){
+  var buy=buyOf(p), now=price(p);
+  if(now<=buy) return now;
+  return buy + Math.floor((now-buy)/2);
+}
+function squadValue(){
+  var v=0; effSquad().forEach(function(p){ v+=sellOf(p); }); return v;
+}
+function totalFunds(){ return squadValue() + S.bank; }
+function trialNet(){
+  var cost=0;
+  trialIn().forEach(function(c){
+    var inP=byCode(c), outP=byCode(S.trial[c]);
+    if(inP) cost+=price(inP);
+    if(outP) cost-=sellOf(outP);
+  });
+  return cost;
+}
+function clubBreaches(list){
+  var c={};
+  list.forEach(function(p){ var t=teamOf(p); c[t]=(c[t]||0)+1; });
+  return Object.keys(c).filter(function(k){return c[k]>3;})
+    .map(function(k){ return (teamById[k]?teamById[k].s:k)+' ('+c[k]+')'; });
+}
+function trialIn(){ return Object.keys(S.trial).map(Number); }
+function trialCount(){ return trialIn().length; }
+function isTrial(c){ return S.trial[c]!==undefined; }
+function outFor(c){ return S.trial[c]; }
+/* the squad as it would be if every trial went through */
+function effSquad(){
+  var out=[], dropped={};
+  trialIn().forEach(function(c){ dropped[S.trial[c]]=1; });
+  D.players.forEach(function(p){
+    if(S.squad.has(p.c)&&!dropped[p.c]) out.push(p);
+    else if(isTrial(p.c)) out.push(p);
+  });
+  return out;
+}
+function clearTrials(){ S.trial={}; }
+function applyTrials(){
+  var n=0;
+  trialIn().forEach(function(c){
+    var o=S.trial[c];
+    if(S.squad.has(o)){
+      S.squad.delete(o); S.squad.add(c); n++;
+      S.buy=S.buy||{};
+      if(S.buy[o]!==undefined) delete S.buy[o];
+      var inP=byCode(c);
+      if(inP) S.buy[c]=price(inP);
+    }
+    if(S.xi.has(o)){ S.xi.delete(o); S.xi.add(c); }
+    if(S.cap===o) S.cap=c;
+  });
+  S.trial={};
+  return n;
+}
 function byPos(list){ var o={1:[],2:[],3:[],4:[]}; list.forEach(function(p){o[posOf(p)].push(p);}); return o; }
 function xiValid(set){
   var c={1:0,2:0,3:0,4:0}, n=0;
@@ -1387,7 +1538,7 @@ function xiValid(set){
   return true;
 }
 function optimiseXI(gw){
-  var sq=squad15(); if(sq.length<11) return null;
+  var sq=effSquad(); if(sq.length<11) return null;
   var g=byPos(sq), best=null;
   [1,2,3,4].forEach(function(k){
     g[k].sort(function(a,b){ return gwScore(b,gw)-gwScore(a,gw); });
@@ -1425,12 +1576,36 @@ function shirtFor(p){
   return '<span class="shirt" style="--cc:'+col+'">'+(url?'<img alt="" loading="lazy" referrerpolicy="no-referrer" src="'+url+'">':'')+
     '<b>'+(t?esc(t.s):'')+'</b></span>';
 }
+function byCode(c){ return D.players.filter(function(x){return x.c===c;})[0]||null; }
+function squadAudit(list){
+  var cost=0, clubs={}, pos={1:0,2:0,3:0,4:0};
+  list.forEach(function(p){
+    cost+=price(p);
+    var t=teamOf(p); clubs[t]=(clubs[t]||0)+1;
+    pos[posOf(p)]=(pos[posOf(p)]||0)+1;
+  });
+  var overClubs=Object.keys(clubs).filter(function(k){return clubs[k]>3;}).map(function(k){
+    return {t:+k, s:(teamById[k]?teamById[k].s:'?'), nm:(teamById[k]?teamById[k].nm:'?'), n:clubs[k]};
+  }).sort(function(a,b){ return b.n-a.n; });
+  var overPos=[1,2,3,4].filter(function(k){return pos[k]>QUOTA[k];}).map(function(k){
+    return {p:k, s:POS[k], n:pos[k], max:QUOTA[k]};
+  });
+  return {cost:cost, budget:S.budget, left:S.budget-cost,
+          over:(cost>S.budget), clubs:clubs, overClubs:overClubs, pos:pos, overPos:overPos};
+}
+function clubTally(list){
+  var m={}; list.forEach(function(p){ var t=teamOf(p); m[t]=(m[t]||0)+1; });
+  return m;
+}
 function playerCard(p,gw,onBench,label){
   var st=status(p), warn=st!=='a', sel=(S.sqSel===p.c);
   var cap=(S.cap===p.c && !onBench);
-  return '<button class="pcard'+(warn?' unavail':'')+(sel?' sel':'')+'" data-sq="'+p.c+'" '+
-    'title="'+esc(p.fn)+(warn?' — '+esc(news(p)||'unavailable'):'')+'">'+
+  var tr=isTrial(p.c), outP=tr?byCode(outFor(p.c)):null;
+  return '<button class="pcard'+(warn?' unavail':'')+(sel?' sel':'')+(tr?' trial':'')+'" data-sq="'+p.c+'" '+
+    'title="'+esc(p.fn)+(tr&&outP?' — trial transfer, replaces '+esc(outP.n):'')+
+    (warn?' — '+esc(news(p)||'unavailable'):'')+'">'+
     (label?'<span class="sublab">'+label+'</span>':'')+
+    (isTrial(p.c)?'<span class="inbadge">IN</span>':'')+
     '<span class="shirtwrap">'+shirtFor(p)+
       (warn?'<i class="flagdot '+st+'" title="'+esc(news(p)||'')+'">!</i>':'')+
       (cap?'<i class="armband">C</i>':'')+
@@ -1447,8 +1622,32 @@ var PITCH_SVG='<svg class="plines" viewBox="0 0 1000 640" preserveAspectRatio="n
   '<line x1="52" y1="486" x2="948" y2="486"/>'+
   '<ellipse cx="500" cy="486" rx="132" ry="62"/>'+
   '</svg>';
+function refreshBudgetUI(){
+  if(S.tab!=='squad') return;
+  var aud=squadAudit(effSquad());
+  var vb=document.querySelector('.valbox'), bb=document.querySelector('.budbox');
+  if(vb){ vb.className='valbox'+(aud.over?' bad':'');
+    vb.innerHTML='squad value <b>£'+(aud.cost/10).toFixed(1)+'m</b>'; }
+  if(bb){
+    bb.className='budbox'+(aud.over?' bad':'');
+    var em=bb.querySelector('em');
+    if(em) em.textContent=(aud.left>=0?'£'+(aud.left/10).toFixed(1)+'m free'
+                                      :'£'+Math.abs(aud.left/10).toFixed(1)+'m over');
+  }
+  var bar=document.querySelector('.auditbar');
+  var over=aud.over;
+  if(bar){
+    var first=bar.querySelector('.alist li.budline');
+    if(over&&first) first.innerHTML='<b>£'+Math.abs(aud.left/10).toFixed(1)+'m over budget</b> — squad value £'+
+      (aud.cost/10).toFixed(1)+'m against a £'+(S.budget/10).toFixed(1)+'m budget.';
+    else if(!over&&first) first.remove();
+    if(!bar.querySelectorAll('.alist li').length) bar.remove();
+  } else if(over){
+    render();
+  }
+}
 function renderSquad(){
-  var sq=squad15(), gw=S.sqGw;
+  var sq=effSquad(), gw=S.sqGw;
   document.getElementById('ro-count').textContent=sq.length+' / 15 picked';
   if(!sq.length){
     document.getElementById('sheet').innerHTML='<div class="nores"><b>No squad yet</b>'+
@@ -1466,10 +1665,12 @@ function renderSquad(){
   var shape=g[2].length+'-'+g[3].length+'-'+g[4].length;
   bench.sort(function(a,b){ return (posOf(a)===1?-1:0)-(posOf(b)===1?-1:0) || gwScore(b,gw)-gwScore(a,gw); });
 
+  var aud=squadAudit(sq);
   var proj=xi.reduce(function(a,p){return a+gwScore(p,gw);},0);
   var capP=xi.filter(function(p){return p.c===S.cap;})[0];
   if(capP) proj+=gwScore(capP,gw);
 
+  var tc=trialCount();
   var h='<div class="sqwrap">';
   h+='<div class="sqbar">'+
     '<div class="gwnav">'+
@@ -1479,8 +1680,30 @@ function renderSquad(){
     '</div>'+
     '<span class="shape">'+shape+'</span>'+
     '<button class="chip act" id="optXi">Optimise lineup</button>'+
+    '<span class="valbox'+(aud.over?' bad':'')+'" title="Total price of all 15'+(tc?' including trials':'')+'">'+
+      'squad value <b>£'+(aud.cost/10).toFixed(1)+'m</b></span>'+
+    '<span class="budbox'+(aud.over?' bad':'')+'">budget <input class="budin" type="number" min="0" max="200" step="0.1" '+
+      'value="'+(S.budget/10).toFixed(1)+'" data-budget aria-label="Budget in millions"><span class="bunit">m</span>'+
+      '<em>'+(aud.left>=0?'£'+(aud.left/10).toFixed(1)+'m free':'£'+Math.abs(aud.left/10).toFixed(1)+'m over')+'</em></span>'+
     '<span class="projbox" title="Heuristic ranking score, not a points forecast">rank score <b>'+proj.toFixed(1)+'</b></span>'+
     '</div>';
+
+  var flags=[];
+  if(aud.over) flags.push('BUDLINE<b>£'+Math.abs(aud.left/10).toFixed(1)+'m over budget</b> — squad value £'+
+    (aud.cost/10).toFixed(1)+'m against a £'+(S.budget/10).toFixed(1)+'m budget.');
+  aud.overClubs.forEach(function(c){
+    flags.push('<b>'+c.n+' players from '+esc(c.nm)+'</b> — the limit is 3.');
+  });
+  aud.overPos.forEach(function(o){
+    flags.push('<b>'+o.n+' '+o.s+'</b> — the limit is '+o.max+'.');
+  });
+  if(flags.length){
+    h+='<div class="auditbar"><span class="alab">'+flags.length+' issue'+(flags.length===1?'':'s')+'</span>'+
+       '<ul class="alist">'+flags.map(function(f){
+         return f.indexOf('BUDLINE')===0 ? '<li class="budline">'+f.slice(7)+'</li>' : '<li>'+f+'</li>';
+       }).join('')+'</ul>'+
+       '<span class="anote">Flagged only — nothing is blocked.</span></div>';
+  }
 
   h+='<div class="pitch">'+PITCH_SVG;
   [1,2,3,4].forEach(function(k){
@@ -1495,15 +1718,75 @@ function renderSquad(){
        return playerCard(p,gw,true,lab);
      }).join('')+'</div><div class="benchlab">Substitutes</div></div>';
 
+  /* watchlist tray */
+  var wl=D.players.filter(function(p){
+    return S.watch.has(p.c) && !S.squad.has(p.c) && !isTrial(p.c);
+  }).sort(function(a,b){ return posOf(a)-posOf(b)||gwScore(b,gw)-gwScore(a,gw); });
+  if(tc){
+    h+='<div class="trialbar"><span class="tlab">'+tc+' trial transfer'+(tc===1?'':'s')+'</span>'+
+       trialIn().map(function(c){
+         var inP=byCode(c), outP=byCode(S.trial[c]);
+         return '<span class="tswap">'+esc(outP?outP.n:'?')+' <b>→</b> '+esc(inP?inP.n:'?')+
+           '<button class="tx" data-untrial="'+c+'" aria-label="Undo">✕</button></span>';
+       }).join('')+
+       '<span class="tacts"><button class="chip act" data-applytrials="1">Commit to squad</button>'+
+       '<button class="chip act" data-cleartrials="1">Discard</button></span></div>';
+  }
+
+  h+='<div class="traybox">'+
+     '<button class="traylab" data-traytoggle="1" aria-expanded="'+S.trialOpen+'">'+
+       (S.trialOpen?'▾':'▸')+' Watchlist — '+wl.length+' available to trial</button>';
+  if(S.trialOpen){
+    if(!wl.length){
+      h+='<p class="traynote">'+(S.watch.size?'Everything on your watchlist is already in the squad.':
+        'Star players on the Players tab to line them up here for trial transfers.')+'</p>';
+    } else {
+      h+='<div class="prow tray">'+wl.map(function(p){
+        return playerCard(p,gw,true,POS[posOf(p)]);
+      }).join('')+'</div>'+
+      '<p class="traynote">Click one, then click a squad player to trial the swap. Nothing changes until you commit.</p>';
+    }
+  }
+  h+='</div>';
+
   if(sq.length<15) h+='<p class="sqnote">'+(15-sq.length)+' more player'+(sq.length===14?'':'s')+' to pick.</p>';
+  if(S.sqMsg) h+='<p class="sqmsg">'+esc(S.sqMsg)+'</p>';
   h+='<p class="sqnote">Click a player, then click another to swap them. Click a starter twice to make them captain. '+
      'Rank score weighs each player\'s scoring rate by fixture difficulty, availability and how often they start — '+
      'it orders your options, it does not predict points.</p>';
   h+='</div>';
   document.getElementById('sheet').innerHTML=h;
 }
+function inTray(c){ return S.watch.has(c) && !S.squad.has(c) && !isTrial(c); }
+function trySwapTrial(a,b){
+  /* a or b is a tray player; the other must be a squad member of the same position */
+  var trayC = inTray(a)?a:(inTray(b)?b:null);
+  if(trayC===null) return false;
+  var otherC = (trayC===a)?b:a;
+  var tray=byCode(trayC), other=byCode(otherC);
+  if(!tray||!other) return false;
+  if(posOf(tray)!==posOf(other)){
+    S.sqMsg='Trial swaps must be like for like — '+POS[posOf(tray)]+' for '+POS[posOf(tray)]+'.';
+    return true;
+  }
+  if(isTrial(otherC)){          /* re-trialling over an existing trial */
+    var freed=S.trial[otherC];
+    delete S.trial[otherC];
+    S.trial[trayC]=freed;
+  } else {
+    if(!S.squad.has(otherC)) return false;
+    S.trial[trayC]=otherC;
+  }
+  if(S.xi.has(otherC)){ S.xi.delete(otherC); S.xi.add(trayC); }
+  if(S.cap===otherC) S.cap=trayC;
+  S.sqMsg='Trialling '+tray.n+' for '+other.n+'. Nothing committed yet.';
+  return true;
+}
 function sqClick(code){
   var p=D.players.filter(function(x){return x.c===code;})[0]; if(!p) return;
+  if(S.sqSel!==null && S.sqSel!==code){
+    if(trySwapTrial(S.sqSel,code)){ S.sqSel=null; save(); render(); return; }
+  }
   if(S.sqSel===null){
     if(S.xi.has(code) && S.cap!==code && S.sqSelPrev===code){ S.cap=code; S.sqSelPrev=null; save(); render(); return; }
     S.sqSel=code; S.sqSelPrev=code; render(); return;
@@ -1551,43 +1834,82 @@ function renderWatch(){
   document.getElementById('watchNote').style.display=list.length?'none':'';
 }
 function renderLedger(){
-  var list=squadList(), spend=list.reduce(function(s,p){return s+price(p);},0);
-  var left=BUDGET-spend, over=left<0, bud=document.getElementById('bud');
-  bud.className='budget'+(over?' over':'');
-  bud.innerHTML='£'+(left/10).toFixed(1)+'m <small>'+(over?'over budget':'free')+'</small>';
+  var list=squadList();
+  var val=squadValue(), mkt=squadMarket(), cost=squadCost();
+  var bank=+(S.bank||0);
+  var funds=val+bank;
+  var net=trialNet();
+  var after=bank-net;
+
+  var bud=document.getElementById('bud');
+  bud.className='budget'+(after<0?' over':'');
+  bud.innerHTML='£'+(val/10).toFixed(1)+'m <small>squad value</small>';
+
   var bar=document.getElementById('budbar');
-  bar.style.width=Math.min(100,spend/BUDGET*100)+'%'; bar.className=over?'over':'';
-  var counts={1:0,2:0,3:0,4:0},clubs={};
-  list.forEach(function(p){counts[posOf(p)]++;var tk=teamOf(p);clubs[tk]=(clubs[tk]||0)+1;});
+  bar.style.width=Math.min(100,funds>0?(val/funds*100):0)+'%';
+  bar.className=(after<0)?'over':'';
+
+  var money=document.getElementById('moneyRows');
+  if(money){
+    var rise=mkt-cost;
+    money.innerHTML=
+      row('In the bank','<input type="number" id="bankIn" step="0.1" min="-100" max="100" value="'+(bank/10).toFixed(1)+'" aria-label="Money in the bank"><span class="mu">m</span>')+
+      row('Total funds','£'+(funds/10).toFixed(1)+'m','tot')+
+      (rise!==0?row('Price movement',(rise>0?'+':'')+'£'+(rise/10).toFixed(1)+'m',rise>0?'up':'down'):'')+
+      (mkt!==val?row('Listed vs sell','£'+(mkt/10).toFixed(1)+'m / £'+(val/10).toFixed(1)+'m','sub'):'')+
+      (net!==0?row('Trials cost',(net>0?'−':'+')+'£'+(Math.abs(net)/10).toFixed(1)+'m → £'+(after/10).toFixed(1)+'m left',after<0?'bad':'ok'):'');
+  }
+  function row(k,v,cls){
+    return '<div class="mrow'+(cls?' '+cls:'')+'"><span>'+k+'</span><b>'+v+'</b></div>';
+  }
+
+  var counts={1:0,2:0,3:0,4:0};
+  list.forEach(function(p){counts[posOf(p)]++;});
   document.getElementById('quota').innerHTML=[1,2,3,4].map(function(k){
     var cls=counts[k]>QUOTA[k]?'over':(counts[k]===QUOTA[k]?'full':'');
     return '<div class="'+cls+'"><span>'+POS[k]+'</span>'+counts[k]+'/'+QUOTA[k]+'</div>';}).join('');
+
   document.getElementById('picks').innerHTML=list.map(function(p){
-    var t=teamById[teamOf(p)];
-    return '<li><b>'+POS[posOf(p)]+'</b><span>'+esc(p.n)+' <em style="opacity:.6">'+(t?t.s:'')+'</em></span><em>£'+
-      (price(p)/10).toFixed(1)+'</em><button data-rm="'+p.c+'" aria-label="Remove '+esc(p.n)+'">✕</button></li>';}).join('');
+    var t=teamById[teamOf(p)], sp=sellPrice(p), cur=price(p), bp=buyPrice(p);
+    var tag = cur>bp ? ' <em class="up" title="Bought £'+(bp/10).toFixed(1)+'m, sells for £'+(sp/10).toFixed(1)+'m">▲</em>'
+            : (cur<bp ? ' <em class="down" title="Bought £'+(bp/10).toFixed(1)+'m">▼</em>' : '');
+    return '<li><b>'+POS[posOf(p)]+'</b><span>'+esc(p.n)+' <em style="opacity:.6">'+(t?t.s:'')+'</em>'+tag+'</span><em>£'+
+      (sp/10).toFixed(1)+'</em><button data-rm="'+p.c+'" aria-label="Remove '+esc(p.n)+'">✕</button></li>';}).join('');
   document.getElementById('pickNote').style.display=list.length?'none':'';
+
+  /* --- warnings: flag, never block --- */
   var msgs=[];
-  if(over) msgs.push('£'+Math.abs(left/10).toFixed(1)+'m over budget.');
-  var bad=Object.keys(clubs).filter(function(k){return clubs[k]>3;});
-  if(bad.length) msgs.push('Over 3 from '+bad.map(function(k){return teamById[k].s;}).join(', ')+'.');
   var overq=[1,2,3,4].filter(function(k){return counts[k]>QUOTA[k];});
-  if(overq.length) msgs.push('Too many '+overq.map(function(k){return POS[k];}).join(', ')+' — remove to fix.');
-  var proj=list.reduce(function(s,p){var st=stats(p);return s+(st?st.tp:0);},0);
-  if(list.length===15&&!msgs.length) msgs.push('Valid 15 · '+proj+' pts on current stats season.');
-  else if(list.length) msgs.push(list.length+'/15 picked · '+proj+' pts.');
-  document.getElementById('warn').textContent=msgs.join(' ');
+  if(overq.length) msgs.push('Too many '+overq.map(function(k){return POS[k];}).join(', ')+'.');
+  var clubs=clubTally(list);
+  var bad=Object.keys(clubs).filter(function(k){return clubs[k]>3;});
+  if(bad.length) msgs.push('Over 3 from '+bad.map(function(k){
+    return (teamById[k]?teamById[k].s:'?')+' ('+clubs[k]+')';}).join(', ')+'.');
+  if(after<0) msgs.push('These trials need £'+(Math.abs(after)/10).toFixed(1)+'m more than you have.');
+  var eclubs=clubTally(effSquad());
+  var ebad=Object.keys(eclubs).filter(function(k){return eclubs[k]>3;});
+  if(trialCount()&&ebad.length) msgs.push('Trials would breach the 3-per-club cap: '+
+    ebad.map(function(k){return (teamById[k]?teamById[k].s:'?')+' ('+eclubs[k]+')';}).join(', ')+'.');
+  var proj=list.reduce(function(a,p){var st=stats(p);return a+(st?st.tp:0);},0);
+  if(!msgs.length&&list.length===15) msgs.push('Valid 15 · '+proj+' pts on current stats season.');
+  else if(!msgs.length&&list.length) msgs.push(list.length+'/15 picked · '+proj+' pts.');
+  var w=document.getElementById('warn');
+  w.textContent=msgs.join(' ');
+  w.className='warn'+((after<0||overq.length||bad.length||(trialCount()&&ebad.length))?' blocked':'');
+
   var sum=document.getElementById('ledgerSum');
-  if(sum) sum.textContent=list.length?(list.length+'/15 · £'+(left/10).toFixed(1)+'m'):'empty';
+  if(sum) sum.textContent=list.length?(list.length+'/15 · £'+(funds/10).toFixed(1)+'m'):'empty';
   save();
 }
 function toggleSquad(c){
-  if(S.squad.has(c)){ S.squad.delete(c); render(); return; }
+  if(S.squad.has(c)){ S.squad.delete(c); if(S.buy) delete S.buy[c]; render(); return; }
   var p=D.players.filter(function(x){return x.c===c;})[0];
   if(!p) return;
   var why=addBlockedBy(p);
   if(why){ flashSquad(why); return; }
   S.squad.add(c);
+  S.buy=S.buy||{};
+  if(S.buy[c]===undefined) S.buy[c]=price(p);
   render();
 }
 function flashSquad(msg){
@@ -1986,7 +2308,7 @@ var STORE=(function(){
 function save(){
   STORE.set('fpl:v2',JSON.stringify({
     squad:Array.from(S.squad),custom:CUSTOM,pins:Array.from(S.pins),watch:Array.from(S.watch),
-    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,planFrom:S.planFrom,planTo:S.planTo,planSort:S.planSort,planDir:S.planDir,planMuted:Array.from(S.planMuted),rowScale:S.rowScale,ledgerOpen:S.ledgerOpen,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw}));
+    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,planFrom:S.planFrom,planTo:S.planTo,planSort:S.planSort,planDir:S.planDir,planMuted:Array.from(S.planMuted),rowScale:S.rowScale,ledgerOpen:S.ledgerOpen,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw,trial:S.trial,trialOpen:S.trialOpen,buy:S.buy,bank:S.bank,budget:S.budget}));
 }
 function load(){
   return STORE.get('fpl:v2').then(function(raw){
@@ -2015,6 +2337,11 @@ function load(){
     (o.xi||[]).forEach(function(c){S.xi.add(c);});
     if(o.cap) S.cap=o.cap;
     if(o.sqGw) S.sqGw=o.sqGw;
+    if(o.trial) S.trial=o.trial;
+    if(o.budget) S.budget=o.budget;
+    if(o.buy) S.buy=o.buy;
+    if(o.bank) S.bank=o.bank;
+    if(o.trialOpen===false) S.trialOpen=false;
     if(o.order&&o.order.length){
       var kept=o.order.filter(function(k){return ALLCOLS.indexOf(k)>=0;});
       ALLCOLS.forEach(function(k){ if(kept.indexOf(k)<0) kept.push(k); });
@@ -2183,6 +2510,23 @@ function init(){
       var r=autoXI(S.sqGw); S.sqSel=null; save(); render();
       return;
     }
+    var ut=e.target.closest('[data-untrial]');
+    if(ut){ e.stopPropagation();
+      var uc=+ut.dataset.untrial, back=S.trial[uc];
+      if(S.xi.has(uc)){ S.xi.delete(uc); S.xi.add(back); }
+      if(S.cap===uc) S.cap=back;
+      delete S.trial[uc]; S.sqMsg=''; save(); render(); return; }
+    if(e.target.closest('[data-applytrials]')){
+      var n=applyTrials(); S.sqMsg=n+' transfer'+(n===1?'':'s')+' committed to your squad.';
+      save(); render(); return; }
+    if(e.target.closest('[data-cleartrials]')){
+      trialIn().forEach(function(c){
+        var b2=S.trial[c];
+        if(S.xi.has(c)){ S.xi.delete(c); S.xi.add(b2); }
+        if(S.cap===c) S.cap=b2;
+      });
+      clearTrials(); S.sqMsg=''; save(); render(); return; }
+    if(e.target.closest('[data-traytoggle]')){ S.trialOpen=!S.trialOpen; save(); render(); return; }
     var sqc=e.target.closest('[data-sq]');
     if(sqc){ sqClick(+sqc.dataset.sq); return; }
     var pn=e.target.closest('[data-pin]');
@@ -2197,6 +2541,17 @@ function init(){
     if(t){ setPlanTo(+t.value); return; }
   });
   document.getElementById('sheet').addEventListener('input',function(e){
+    var bd=e.target.closest('[data-budget]');
+    if(bd){
+      var raw=bd.value;
+      if(raw===''||raw.charAt(raw.length-1)==='.') return;
+      var n=parseFloat(raw);
+      if(isNaN(n)) return;
+      S.budget=Math.round(n*10);
+      save();
+      refreshBudgetUI();
+      return;
+    }
     var lo=e.target.closest('[data-planlo]'), hi=e.target.closest('[data-planhi]');
     if(!lo&&!hi) return;
     if(lo){
@@ -2227,6 +2582,23 @@ function init(){
       var r=autoXI(S.sqGw); S.sqSel=null; save(); render();
       return;
     }
+    var ut=e.target.closest('[data-untrial]');
+    if(ut){ e.stopPropagation();
+      var uc=+ut.dataset.untrial, back=S.trial[uc];
+      if(S.xi.has(uc)){ S.xi.delete(uc); S.xi.add(back); }
+      if(S.cap===uc) S.cap=back;
+      delete S.trial[uc]; S.sqMsg=''; save(); render(); return; }
+    if(e.target.closest('[data-applytrials]')){
+      var n=applyTrials(); S.sqMsg=n+' transfer'+(n===1?'':'s')+' committed to your squad.';
+      save(); render(); return; }
+    if(e.target.closest('[data-cleartrials]')){
+      trialIn().forEach(function(c){
+        var b2=S.trial[c];
+        if(S.xi.has(c)){ S.xi.delete(c); S.xi.add(b2); }
+        if(S.cap===c) S.cap=b2;
+      });
+      clearTrials(); S.sqMsg=''; save(); render(); return; }
+    if(e.target.closest('[data-traytoggle]')){ S.trialOpen=!S.trialOpen; save(); render(); return; }
     var sqc=e.target.closest('[data-sq]');
     if(sqc){ sqClick(+sqc.dataset.sq); return; }
     var pn=e.target.closest('[data-pin]');
@@ -2251,7 +2623,19 @@ function init(){
     applyLedgerFold();
     save();
   });
-  on('clearSquad','click',function(){ S.squad.clear(); render(); });
+  document.getElementById('moneyRows').addEventListener('input',function(e){
+    if(e.target.id!=='bankIn') return;
+    var raw=e.target.value;
+    if(raw===''||raw==='-'||raw.charAt(raw.length-1)==='.') return;
+    var v=parseFloat(raw);
+    if(isNaN(v)) return;
+    S.bank=Math.round(v*10);
+    save();
+    var sum=document.getElementById('ledgerSum');
+    if(sum) sum.textContent=S.squad.size+'/15 · £'+((squadValue()+S.bank)/10).toFixed(1)+'m';
+    render();
+  });
+  on('clearSquad','click',function(){ S.squad.clear(); S.buy={}; render(); });
   on('copySquad','click',function(){
     var l=squadList();
     if(!l.length){ document.getElementById('warn').textContent='No players picked yet.'; return; }
