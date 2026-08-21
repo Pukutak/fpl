@@ -30,8 +30,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .readout{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-align:right;line-height:1.5}
 .readout b{color:var(--ink);font-weight:600}
 .readout .live{color:var(--mint)}
-.wintog{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--ink-soft);width:100%}
-.wintog .sw:disabled{opacity:.35;cursor:not-allowed}
+.winchips{display:flex;flex-wrap:wrap;gap:4px}
+.winchips .chip.seg{flex:0 1 auto;padding:4px 9px}
+.winchips .chip.seg:disabled{opacity:.35;cursor:not-allowed}
 .winrow{display:flex;align-items:center;gap:5px;width:100%;margin-top:7px}
 .winrange{flex:1;accent-color:var(--ink);margin:0}
 #winChips{display:block}
@@ -235,6 +236,7 @@ thead th.dropR{box-shadow:inset -3px 0 0 var(--mint)}
 .mug img{position:relative;width:100%;height:100%;object-fit:cover;object-position:50% 12%;display:block}
 tbody td.l:has(.mug){padding:3px 6px}
 .note.warnnote{color:var(--amber)}
+.note.quiet{color:var(--ink-faint);font-size:10.5px}
 .stalewarn{color:var(--amber)}
 .note b{color:inherit}
 #filterName{width:100%;font-family:var(--sans);font-size:12px;padding:5px 7px;
@@ -494,10 +496,7 @@ tbody td.l:has(.mug){padding:3px 6px}
           <div class="chips" id="winChips"></div>
           <p class="note" id="winNote" style="margin-top:5px"></p>
         </div>
-        <div class="fgroup" style="margin-top:8px">
-          <div class="flabel"><span>Recent-form window</span><b id="fwOut">6 GWs</b></div>
-          <input type="range" id="formwin" min="1" max="15" step="1" value="6">
-        </div>
+
         <div style="display:flex;gap:10px;margin-top:7px;flex-wrap:wrap">
           <button class="linkbtn" id="refreshGh">refresh now</button>
         </div>
@@ -661,7 +660,7 @@ D.teams.forEach(function(t){
 var LIVE=null, LIVEMETA=null, LIVEGW=null;
 
 var S={q:'',pos:new Set(),teams:new Set(),rules:[],pins:new Set(),watch:new Set(),watchOnly:false,
-  startGw:1,span:6,pspan:10,planFrom:1,planTo:10,rowScale:0,showPhoto:true,ledgerOpen:false,apiUrl:'',formWin:6,deepGw:true,xi:new Set(),cap:null,sqGw:1,sqSel:null,trial:{},trialOpen:true,sqMsg:'',budget:1000,statWin:0,winLen:6,bank:0,buy:{},planSel:new Set(),planHide:false,planSort:'fdr',planDir:1,planMuted:new Set(),order:null,hidden:null,nodata:false,fit:false,sp:false,
+  startGw:1,span:6,pspan:10,planFrom:1,planTo:10,rowScale:0,showPhoto:true,ledgerOpen:false,apiUrl:'',deepGw:true,xi:new Set(),cap:null,sqGw:1,sqSel:null,trial:{},trialOpen:true,sqMsg:'',budget:1000,statWin:0,winLen:5,bank:0,buy:{},planSel:new Set(),planHide:false,planSort:'fdr',planDir:1,planMuted:new Set(),order:null,hidden:null,nodata:false,fit:false,sp:false,
   season:'live',sort:'tp',dir:-1,tab:'players',squad:new Set(),preset:null};
 
 /* ---------- accessors ---------- */
@@ -804,10 +803,10 @@ var REG={};
    if(m.form===undefined) return '<span class="mut">—</span>';
    var c=m.form>=5?'over':(m.form<2?'level':'');
    return '<span class="'+c+'">'+m.form.toFixed(1)+'</span>';}},
- {k:'l6',t:function(){return (S.season==='live'&&GWROWS)?('Last '+S.formWin):'Last 6';},d:1,r:function(p,m){
+ {k:'l6',t:function(){return (S.season==='live'&&GWROWS)?('Last '+(S.winLen||5)):'Last 6';},d:1,r:function(p,m){
    if(m.l6===undefined) return '<span class="mut">—</span>';
    return '<b>'+m.l6+'</b>';}},
- {k:'l6ppg',t:function(){return (S.season==='live'&&GWROWS)?('Last '+S.formWin+' /app'):'Last 6 /app';},d:1,r:function(p,m){
+ {k:'l6ppg',t:function(){return (S.season==='live'&&GWROWS)?('Last '+(S.winLen||5)+' /app'):'Last 6 /app';},d:1,r:function(p,m){
    if(m.l6ppg===undefined) return '<span class="mut">—</span>';
    return num(m.l6ppg,1);}},
  {k:'mn',t:'Mins',d:1,r:function(p,m){return '<span class="mut">'+num(m.mn,0)+'</span>';}},
@@ -1124,39 +1123,42 @@ function renderWinChips(){
   var rows=activeGwRows();
   var have=!!(rows&&rows.length);
   var mx=have?maxGwIn(rows):0;
-  var on=(S.statWin>0&&have);
-  var n=Math.max(1,Math.min(mx||38,S.statWin||6));
+  var cur=S.statWin;                       /* 0 = season */
+  var preset=[3,5,10];
+  var isCustom=(cur>0&&preset.indexOf(cur)<0);
 
-  box.innerHTML=
-    '<div class="wintog">'+
-      '<span>Rolling window</span>'+
-      '<button class="sw" id="winSw" aria-pressed="'+on+'" aria-label="Use a rolling window"'+
-        (have?'':' disabled')+'></button>'+
-    '</div>'+
-    (on?
-      '<div class="winrow">'+
-        '<button class="gwbtn sm" data-winstep="-1" aria-label="Fewer gameweeks"'+(n<=1?' disabled':'')+'>−</button>'+
-        '<input class="gwnum" type="number" min="1" max="'+(mx||38)+'" step="1" value="'+n+'" data-winnum aria-label="Gameweeks in window">'+
-        '<button class="gwbtn sm" data-winstep="1" aria-label="More gameweeks"'+(n>=mx?' disabled':'')+'>+</button>'+
-        '<input class="winrange" type="range" min="1" max="'+(mx||38)+'" step="1" value="'+n+'" data-winrange aria-label="Window length">'+
-      '</div>'
-    :'');
+  var chips=[{v:0,l:'Season'}].concat(preset.map(function(n){return {v:n,l:'Last '+n};}));
+  var h='<div class="winchips">'+chips.map(function(c){
+      var dis=(!have&&c.v>0);
+      return '<button class="chip seg" data-win="'+c.v+'" aria-pressed="'+(cur===c.v)+'"'+
+        (dis?' disabled':'')+'>'+c.l+'</button>';
+    }).join('')+
+    '<button class="chip seg" data-wincustom="1" aria-pressed="'+isCustom+'"'+(have?'':' disabled')+'>Custom</button>'+
+    '</div>';
+  if(isCustom){
+    h+='<div class="winrow">'+
+       '<button class="gwbtn sm" data-winstep="-1" aria-label="Fewer"'+(cur<=1?' disabled':'')+'>−</button>'+
+       '<input class="gwnum" type="number" min="1" max="'+(mx||38)+'" step="1" value="'+cur+'" data-winnum aria-label="Gameweeks">'+
+       '<button class="gwbtn sm" data-winstep="1" aria-label="More"'+(cur>=mx?' disabled':'')+'>+</button>'+
+       '<input class="winrange" type="range" min="1" max="'+(mx||38)+'" step="1" value="'+cur+'" data-winrange aria-label="Window length">'+
+       '</div>';
+  }
+  box.innerHTML=h;
 
   var out=document.getElementById('winOut'), note=document.getElementById('winNote');
   if(!have){
-    if(out) out.textContent='live data only';
+    if(out) out.textContent='season';
     if(note) note.textContent=(S.season==='live')
-      ? 'Per-gameweek history has not loaded yet. Turn on the deep fetch under Advanced data source, then refresh.'
-      : 'Windows need live per-gameweek data — switch Stats season to 2026/27.';
+      ? 'Windows unlock once gameweeks have been played.'
+      : 'Windows need live data.';
     return;
   }
-  if(on&&WINSTATS){
+  if(cur>0&&WINSTATS){
     if(out) out.textContent='GW'+WINSTATS.from+'–'+WINSTATS.to;
-    if(note) note.textContent='Every stat and per-90 figure is calculated from these '+
-      S.statWin+' gameweek'+(S.statWin===1?'':'s')+' only.';
+    if(note) note.textContent='All stats and per-90s use these '+cur+' gameweek'+(cur===1?'':'s')+'.';
   } else {
     if(out) out.textContent='full season';
-    if(note) note.textContent='Season to date, through GW'+mx+'. Switch on the window to see form.';
+    if(note) note.textContent='Season to date, through GW'+mx+'.';
   }
 }
 function setStatWin(n){
@@ -2165,9 +2167,7 @@ function ingestCSV(pl,fx,tm){
       'so every stat is still zero.</b> Prices, clubs, ownership and injury flags are current.'+
       (LIVE_ADDED?' '+LIVE_ADDED+' new players added to the roster.':''),'warnnote');
   } else {
-    note('Loaded '+pl.length+' players from the '+GHSEASON+' archive'+(LIVEGW?', next is GW'+LIVEGW:'')+'. '+
-      'This mirrors the official data and updates after each gameweek.'+
-      (LIVE_ADDED?' '+LIVE_ADDED+' new players added to the roster.':''),'ok');
+    note('Live data · '+pl.length+' players'+(LIVEGW?' · GW'+LIVEGW+' next':''),'quiet');
   }
   document.getElementById('pasteBox').style.display='none';
   syncControls(); render();
@@ -2224,7 +2224,7 @@ function applyGw(){
   if(!GWROWS||!LIVE) return 0;
   var maxGw=0;
   GWROWS.forEach(function(r){ if(r.gw>maxGw) maxGw=r.gw; });
-  var lo=Math.max(1,maxGw-S.formWin+1);
+  var lo=Math.max(1,maxGw-(S.winLen||5)+1);
   var agg={};
   GWROWS.forEach(function(r){
     var a=agg[r.c]||(agg[r.c]={dch:0,dcs:0,ln:0,la:0});
@@ -2248,7 +2248,7 @@ function applyGw(){
 }
 function deepRefresh(){
   var dn=document.getElementById('dataNote'), prev=dn.innerHTML;
-  note(prev+'<br><b>Fetching per-gameweek history…</b>');
+  note(prev,'quiet');
   return fetchTimeout(GH+GHSEASON+'/gws/merged_gw.csv',60000).then(function(r){
     if(r.status===404) throw new Error('no gameweeks played yet');
     if(!r.ok) throw new Error('HTTP '+r.status);
@@ -2265,13 +2265,11 @@ function deepRefresh(){
     var mx=applyGw();
     if(S.statWin>0) buildWindow(S.statWin);
     renderWinChips();
-    note(prev+'<br><b>Per-gameweek history loaded</b> — '+GWROWS.length.toLocaleString()+
-      ' match records through GW'+mx+'. DefCon points and recent form are now live.','ok');
+    note(prev+' · gameweek history through GW'+mx,'quiet');
     render();
   }).catch(function(e){
     GWROWS=null; renderWinChips();
-    note(prev+'<br>Per-gameweek history unavailable ('+esc(e.message)+
-      '). DefCon points and Last-N stay blank until gameweeks have been played.','warnnote');
+    note(prev,'quiet');
     render();
   });
 }
@@ -2367,8 +2365,7 @@ function goCustom(){
   return Promise.all(jobs).then(function(r){
     var json0=r[0];
     ingest(r[0], r[1]);
-    note('Loaded from <b>'+esc(u)+'</b> — published with this page, so no proxy and no CORS. '+
-      (json0&&json0.events?'':'')+'Always current.','ok');
+    note('Live data · your own endpoint','quiet');
   });
 }
 function goLive(quiet){
@@ -2415,7 +2412,7 @@ var STORE=(function(){
 function save(){
   STORE.set('fpl:v2',JSON.stringify({
     squad:Array.from(S.squad),custom:CUSTOM,pins:Array.from(S.pins),watch:Array.from(S.watch),
-    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,planFrom:S.planFrom,planTo:S.planTo,planSort:S.planSort,planDir:S.planDir,planMuted:Array.from(S.planMuted),rowScale:S.rowScale,ledgerOpen:S.ledgerOpen,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,formWin:S.formWin,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw,trial:S.trial,trialOpen:S.trialOpen,buy:S.buy,bank:S.bank,budget:S.budget,statWin:S.statWin,winLen:S.winLen,season:S.season}));
+    order:S.order,hidden:Array.from(S.hidden),layouts:CUSTOMLAYOUTS,pspan:S.pspan,planFrom:S.planFrom,planTo:S.planTo,planSort:S.planSort,planDir:S.planDir,planMuted:Array.from(S.planMuted),rowScale:S.rowScale,ledgerOpen:S.ledgerOpen,planSel:Array.from(S.planSel),planHide:S.planHide,showPhoto:S.showPhoto,deepGw:S.deepGw,apiUrl:S.apiUrl,xi:Array.from(S.xi),cap:S.cap,sqGw:S.sqGw,trial:S.trial,trialOpen:S.trialOpen,buy:S.buy,bank:S.bank,budget:S.budget,statWin:S.statWin,winLen:S.winLen,season:S.season}));
 }
 function load(){
   return STORE.get('fpl:v2').then(function(raw){
@@ -2438,7 +2435,6 @@ function load(){
     (o.planSel||[]).forEach(function(t){S.planSel.add(t);});
     if(o.planHide) S.planHide=true;
     if(o.showPhoto===false) S.showPhoto=false;
-    if(o.formWin) S.formWin=o.formWin;
     if(o.apiUrl) S.apiUrl=o.apiUrl;
     if(o.deepGw===false) S.deepGw=false;
     (o.xi||[]).forEach(function(c){S.xi.add(c);});
@@ -2468,7 +2464,6 @@ function syncControls(){
   document.getElementById('startgw').value=S.startGw;
   document.getElementById('span').value=S.span;
   document.getElementById('rowsize').value=S.rowScale;
-  document.getElementById('formwin').value=S.formWin;
   document.getElementById('apiUrl').value=S.apiUrl||'';
   document.getElementById('t-deep').setAttribute('aria-pressed',S.deepGw);
   document.querySelectorAll('[data-pos]').forEach(function(b){b.setAttribute('aria-pressed',S.pos.has(+b.dataset.pos));});
@@ -2481,7 +2476,6 @@ function syncControls(){
 function labels(){
   document.getElementById('startOut').textContent='GW'+S.startGw;
   document.getElementById('spanOut').textContent=S.span+' GW'+(S.span>1?'s':'');
-  document.getElementById('fwOut').textContent=S.formWin+' GW'+(S.formWin>1?'s':'');
   document.getElementById('rowOut').textContent=['Compact','Small','Medium','Large','Largest'][S.rowScale];
 }
 function clearPreset(){ S.preset=null; renderPresets(); }
@@ -2513,16 +2507,18 @@ function init(){
   on('startgw','input',function(){ S.startGw=+this.value; labels(); DOMAIN={}; render(); });
   on('span','input',function(){ S.span=+this.value; labels(); DOMAIN={}; render(); });
   on('rowsize','input',function(){ S.rowScale=+this.value; labels(); save(); render(); });
-  on('formwin','input',function(){ S.formWin=+this.value; labels(); applyGw(); save(); render(); });
   sw('t-deep','deepGw');
 
   var winBox=document.getElementById('winChips');
   winBox.addEventListener('click',function(e){
-    if(e.target.closest('#winSw')){
-      var rows=activeGwRows();
-      if(!rows||!rows.length) return;
-      setStatWin(S.statWin>0?0:(S.winLen||6));
-      return;
+    var ch=e.target.closest('[data-win]');
+    if(ch&&!ch.disabled){ var v0=+ch.dataset.win; if(v0>0) S.winLen=v0; setStatWin(v0); return; }
+    var cu=e.target.closest('[data-wincustom]');
+    if(cu&&!cu.disabled){
+      var rows0=activeGwRows(), mx0=rows0?maxGwIn(rows0):38;
+      var start=Math.max(1,Math.min(mx0,S.winLen||6));
+      if([3,5,10].indexOf(start)>=0) start=Math.max(1,Math.min(mx0,start+1));
+      S.winLen=start; setStatWin(start); return;
     }
     var st=e.target.closest('[data-winstep]');
     if(st&&!st.disabled){
