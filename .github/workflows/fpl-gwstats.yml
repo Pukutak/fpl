@@ -1,0 +1,161 @@
+name: Refresh FPL gameweek stats
+
+on:
+  schedule:
+    - cron: '41 * * * *'      # hourly, 41 min past
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fpl-gwstats
+  cancel-in-progress: true
+
+jobs:
+  gwstats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Fetch finished gameweeks
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request, time
+
+          API = 'https://fantasy.premierleague.com/api/'
+          UA  = {'User-Agent': 'Mozilla/5.0 (compatible; fpl-desk/1.0)'}
+          OUT = 'data/gwstats.json'
+
+          def get(path, tries=4):
+              last = None
+              for a in range(tries):
+                  try:
+                      req = urllib.request.Request(API + path, headers=UA)
+                      with urllib.request.urlopen(req, timeout=60) as r:
+                          return json.load(r)
+                  except Exception as e:
+                      last = e
+                      time.sleep(3 * (a + 1))
+              raise SystemExit('fetch failed for %s: %s' % (path, last))
+
+          boot = get('bootstrap-static/')
+          els = boot.get('elements') or []
+          if len(els) < 300:
+              raise SystemExit('bootstrap looks wrong: %d players' % len(els))
+
+          # element id -> permanent player code, and id -> position
+          code_of = {e['id']: e['code'] for e in els}
+          type_of = {e['id']: e['element_type'] for e in els}
+
+          events = boot.get('events') or []
+          finished = [e['id'] for e in events if e.get('finished')]
+          # the newest finished gameweek may still be having bonus applied
+          provisional = {e['id'] for e in events
+                         if e.get('finished') and not e.get('data_checked')}
+
+          os.makedirs('data', exist_ok=True)
+          try:
+              store = json.load(open(OUT))
+              if store.get('season') != '2026-27':
+                  store = {}
+          except Exception:
+              store = {}
+
+          gws = store.get('gws', {})
+          have = set(int(k) for k in gws.keys())
+          # refetch anything not yet finalised, in case bonus changed
+          todo = [g for g in finished if g not in have or g in provisional]
+
+          THRESH = {1: 999, 2: 10, 3: 12, 4: 12}   # GKP never qualifies
+
+          def num(v):
+              try: return float(v)
+              except Exception: return 0.0
+
+          fetched = 0
+          for gw in sorted(todo):
+              live = get('event/%d/live/' % gw)
+              rows = {}
+              for el in live.get('elements', []):
+                  eid = el.get('id')
+                  code = code_of.get(eid)
+                  if code is None:
+                      continue
+                  st = el.get('stats') or {}
+                  mn = int(num(st.get('minutes')))
+                  pts = int(num(st.get('total_points')))
+                  if mn == 0 and pts == 0:
+                      continue
+
+                  dc = int(num(st.get('defensive_contribution')))
+
+                  # points FPL actually awarded for defensive contribution
+                  dcp = None
+                  for blk in (el.get('explain') or []):
+                      for item in (blk.get('stats') or []):
+                          if item.get('identifier') == 'defensive_contribution':
+                              dcp = (dcp or 0) + int(num(item.get('points')))
+                  if dcp is None:
+                      # endpoint did not break it out: fall back to the rule
+                      dcp = 2 if dc >= THRESH.get(type_of.get(eid, 3), 12) else 0
+
+                  rows[str(code)] = [
+                      mn, pts,
+                      int(num(st.get('goals_scored'))), int(num(st.get('assists'))),
+                      int(num(st.get('clean_sheets'))), int(num(st.get('goals_conceded'))),
+                      int(num(st.get('saves'))), int(num(st.get('bonus'))),
+                      int(num(st.get('bps'))),
+                      round(num(st.get('expected_goals')), 2),
+                      round(num(st.get('expected_assists')), 2),
+                      round(num(st.get('expected_goals_conceded')), 2),
+                      dc, int(num(st.get('starts'))), dcp,
+                  ]
+              if not rows:
+                  print('gw %d returned no rows, skipping' % gw)
+                  continue
+              gws[str(gw)] = rows
+              fetched += 1
+              print('gw %d: %d players' % (gw, len(rows)))
+              time.sleep(1)
+
+          if not gws:
+              print('nothing to write yet (no finished gameweeks)')
+              raise SystemExit(0)
+
+          store = {
+              'season': '2026-27',
+              'updated': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+              'maxGw': max(int(k) for k in gws.keys()),
+              'fields': ['mn','pts','g','a','cs','gc','sv','bo','bps','xg','xa','xgc','dc','ss','dcp'],
+              'gws': gws,
+          }
+          json.dump(store, open(OUT, 'w'), separators=(',', ':'))
+          print('wrote %s: %d gameweeks (%d newly fetched)' %
+                (OUT, len(gws), fetched))
+          PY
+
+      - name: Sanity-check the file
+        run: |
+          python3 - <<'PY'
+          import json, os
+          p = 'data/gwstats.json'
+          if not os.path.exists(p):
+              print('no file yet - nothing to check'); raise SystemExit(0)
+          d = json.load(open(p))
+          assert d.get('gws'), 'no gameweeks'
+          for gw, rows in d['gws'].items():
+              assert len(rows) > 100, 'gw %s only has %d players' % (gw, len(rows))
+              for r in rows.values():
+                  assert len(r) == 15, 'bad row length in gw %s' % gw
+          print('ok:', len(d['gws']), 'gameweeks through GW%s' % d['maxGw'])
+          PY
+
+      - name: Commit if changed
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/gwstats.json 2>/dev/null || true
+          git diff --staged --quiet && echo 'no change' && exit 0
+          git commit -m "FPL gameweek stats $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
