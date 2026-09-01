@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Fetch finished gameweeks
+      - name: Fetch gameweek data
         run: |
           python3 - <<'PY'
           import json, os, urllib.request, time
@@ -49,10 +49,14 @@ jobs:
           type_of = {e['id']: e['element_type'] for e in els}
 
           events = boot.get('events') or []
-          finished = [e['id'] for e in events if e.get('finished')]
-          # the newest finished gameweek may still be having bonus applied
+          # include the gameweek in progress, not just completed ones - otherwise
+          # mid-gameweek results are invisible until the last fixture finishes
+          wanted = [e['id'] for e in events
+                    if e.get('finished') or e.get('is_current')
+                    or (e.get('is_previous') and not e.get('data_checked'))]
+          # anything not finalised gets refetched every run (bonus can still change)
           provisional = {e['id'] for e in events
-                         if e.get('finished') and not e.get('data_checked')}
+                         if not e.get('data_checked')}
 
           os.makedirs('data', exist_ok=True)
           try:
@@ -65,7 +69,7 @@ jobs:
           gws = store.get('gws', {})
           have = set(int(k) for k in gws.keys())
           # refetch anything not yet finalised, in case bonus changed
-          todo = [g for g in finished if g not in have or g in provisional]
+          todo = [g for g in wanted if g not in have or g in provisional]
 
           THRESH = {1: 999, 2: 10, 3: 12, 4: 12}   # GKP never qualifies
 
@@ -120,11 +124,12 @@ jobs:
               time.sleep(1)
 
           if not gws:
-              print('nothing to write yet (no finished gameweeks)')
+              print('nothing to write yet (no gameweeks played)')
               raise SystemExit(0)
 
           store = {
               'season': '2026-27',
+              'provisional': sorted(int(g) for g in provisional if str(g) in gws),
               'updated': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
               'maxGw': max(int(k) for k in gws.keys()),
               'fields': ['mn','pts','g','a','cs','gc','sv','bo','bps','xg','xa','xgc','dc','ss','dcp'],
