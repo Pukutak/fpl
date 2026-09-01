@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Preseason Desk — FPL 2026/27</title>
+<title>FPL Desk — 2026/27</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Saira+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
@@ -467,7 +467,7 @@ tbody td.l:has(.mug){padding:3px 6px}
   <header class="masthead">
     <div>
       <div class="kicker">Fantasy Premier League</div>
-      <div class="brand">Preseason <em>Desk</em></div>
+      <div class="brand">FPL <em>Desk</em></div>
     </div>
     <div class="spacer"></div>
     <div class="readout">
@@ -839,7 +839,9 @@ var REG={};
  {k:'dchit',t:'DC hit%',d:1,r:function(p,m){
    if(m.dchit===undefined) return '<span class="mut">—</span>';
    var c=m.dchit>=55?'over':(m.dchit<25?'level':'');
-   return '<span class="'+c+'">'+m.dchit.toFixed(0)+'%</span>';}},
+   var s2=stats(p);
+   var tip=s2&&s2.dcs!==undefined?(s2.dch+' of '+s2.dcs+' starts'+(GWMAX?', GW1–'+GWMAX:'')):'';
+   return '<span class="'+c+'" title="'+tip+'">'+m.dchit.toFixed(0)+'%</span>';}},
  {k:'dcp90',t:'DC pts/90',p90:true,d:1,r:function(p,m){return num(m.dcp90,2);}},
  {k:'cs',t:'CS',d:1,r:function(p,m){return '<span class="mut">'+num(m.cs,0)+'</span>';}},
  {k:'gc',t:'GC',d:1,r:function(p,m){return '<span class="mut">'+num(m.gc,0)+'</span>';}},
@@ -1454,7 +1456,11 @@ function render(){
     'so a two-minute cameo is not extrapolated across a full match. '+
     'Stats are matched to the current squad list by permanent player code. '+
     (S.season==='live'
-      ? 'Form is the live rolling average over the last 30 days; Last 6 needs per-gameweek data and stays blank in live mode.'
+      ? ('Form is the live 30-day rolling average. DefCon points, hit rate and any window come from '+
+         (GWMAX?((GWSRC==='official'?'the official FPL per-gameweek endpoint':'the community archive')+
+                 ', covering GW1–'+GWMAX+
+                 (GWLAG?', which is behind the live game — later gameweeks are not in the source file yet.':'.'))
+               :'match data, which has not loaded yet.'))
       : 'Form here is the reading as the 2025/26 season closed; Last 6 is points scored across GW33-38.');
 }
 
@@ -2178,9 +2184,11 @@ function ingestCSV(pl,fx,tm){
     el.innerHTML+='<br><span class="'+(stale?'stalewarn':'')+'">Archive last updated <b>'+ago(t)+'</b>.'+
       (stale?' Transfers and price changes since then will not show — use <b>try official API</b> for the very latest.':'')+'</span>';
   });
-  if(S.deepGw) setTimeout(deepRefresh,50);
+  if(S.deepGw) setTimeout(function(){
+    deepOfficial().catch(function(){ deepRefresh(); });
+  },50);
 }
-var GWROWS=null, ID2CODE={}, LIVE_ADDED=0, WINSTATS=null;
+var GWROWS=null, ID2CODE={}, LIVE_ADDED=0, WINSTATS=null, GWMAX=0, GWLAG=null, GWSRC='archive';
 /* [gw,mn,pts,g,a,cs,gc,sv,bo,bps,xg,xa,xgc,dc,starts] */
 /* windows use live per-gameweek data only - never a previous season */
 function activeGwRows(){ return (S.season==='live') ? GWROWS : null; }
@@ -2209,7 +2217,7 @@ function buildWindow(n){
       rows.forEach(function(r){
         if(r.c!==+k||r.gw<lo) return;
         if(r.mn>=60) starts++;
-        if(r.dc>=thr) hits++;
+        if(r.dcp!==undefined ? r.dcp>0 : r.dc>=thr) hits++;
       });
       a.dch=hits; a.dcs=starts; a.dcp=hits*2;
     }
@@ -2229,7 +2237,10 @@ function applyGw(){
   GWROWS.forEach(function(r){
     var a=agg[r.c]||(agg[r.c]={dch:0,dcs:0,ln:0,la:0});
     if(r.mn>0){
-      if(r.pos!=='GK'){
+      if(r.dcp!==undefined){
+        if(r.mn>=60) a.dcs++;
+        if(r.dcp>0) a.dch++;
+      } else if(r.pos!=='GK'){
         if(r.mn>=60) a.dcs++;
         if(r.dc>=(r.pos==='DEF'?10:12)) a.dch++;
       }
@@ -2237,6 +2248,11 @@ function applyGw(){
     }
     if(r.gw>=lo) a.ln+=r.pts;
   });
+  GWMAX=maxGw;
+  var gwMin=0, seasonMin=0;
+  GWROWS.forEach(function(r){ gwMin+=r.mn; });
+  Object.keys(LIVE).forEach(function(c){ seasonMin+=(LIVE[c].mn||0); });
+  GWLAG=(seasonMin>0 && gwMin < seasonMin*0.97) ? {gw:gwMin, season:seasonMin} : null;
   Object.keys(LIVE).forEach(function(code){
     var a=agg[code];
     if(!a){ delete LIVE[code].dcp; delete LIVE[code].l6; return; }
@@ -2245,6 +2261,38 @@ function applyGw(){
   });
   DOMAIN={};
   return maxGw;
+}
+function ingestGwStats(j){
+  if(!j||!j.gws) throw new Error('not a gwstats file');
+  var rows=[];
+  Object.keys(j.gws).forEach(function(gw){
+    var g=+gw, block=j.gws[gw];
+    Object.keys(block).forEach(function(code){
+      var r=block[code];
+      rows.push({c:+code,gw:g,mn:r[0],pts:r[1],g:r[2],a:r[3],cs:r[4],gc:r[5],sv:r[6],
+                 bo:r[7],bps:r[8],xg:r[9],xa:r[10],xgc:r[11],dc:r[12],ss:r[13],dcp:r[14]});
+    });
+  });
+  GWROWS=rows;
+  GWSRC='official';
+  return j.maxGw||maxGwIn(rows);
+}
+function deepOfficial(){
+  return fetchTimeout('data/gwstats.json',20000).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var ct=(r.headers&&r.headers.get&&r.headers.get('content-type'))||'';
+    if(ct.indexOf('html')>=0) throw new Error('not json');
+    return r.json();
+  }).then(function(j){
+    var mx=ingestGwStats(j);
+    applyGw();
+    if(S.statWin>0) buildWindow(S.statWin);
+    renderWinChips();
+    var prev=document.getElementById('dataNote').innerHTML;
+    note(prev+' · official match data through GW'+mx,'quiet');
+    render();
+    return true;
+  });
 }
 function deepRefresh(){
   var dn=document.getElementById('dataNote'), prev=dn.innerHTML;
@@ -2255,7 +2303,7 @@ function deepRefresh(){
     return r.text();
   }).then(function(txt){
     var rows=parseCSV(txt), n=function(v){ var x=parseFloat(v); return isNaN(x)?0:x; };
-    GWROWS=[];
+    GWROWS=[]; GWSRC='archive';
     rows.forEach(function(r){
       var code=ID2CODE[r.element];
       if(!code) return;
@@ -2265,7 +2313,9 @@ function deepRefresh(){
     var mx=applyGw();
     if(S.statWin>0) buildWindow(S.statWin);
     renderWinChips();
-    note(prev+' · gameweek history through GW'+mx,'quiet');
+    note(prev+' · match data through GW'+mx+
+      (GWLAG?' <span class="stalewarn">— source is behind the live game, so DefCon and window stats stop at GW'+mx+'</span>':''),
+      'quiet');
     render();
   }).catch(function(e){
     GWROWS=null; renderWinChips();
