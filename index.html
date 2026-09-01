@@ -155,6 +155,7 @@ td.l{text-align:left;font-family:var(--sans)}
 .dot-d{background:var(--amber)} .dot-i,.dot-s,.dot-u{background:var(--red)}
 .sub{font-family:var(--cond);font-size:11px;letter-spacing:.06em;color:var(--ink-faint);text-transform:uppercase}
 .hi{color:var(--mint);font-weight:600}
+.frac{font-style:normal;font-size:9.5px;color:var(--ink-faint);font-weight:400}
 .over{color:var(--mint);font-weight:600}
 .under{color:var(--red);font-weight:600}
 .level{color:var(--ink-faint)}
@@ -839,8 +840,12 @@ var REG={};
  {k:'dchit',t:'DC hit%',d:1,r:function(p,m){
    if(m.dchit===undefined) return '<span class="mut">—</span>';
    var c=m.dchit>=55?'over':(m.dchit<25?'level':'');
+   var sf=stats(p);
+   if(sf&&sf.dcs!==undefined) return '<span class="'+c+'" title="'+
+     sf.dch+' of '+sf.dcs+' match'+(sf.dcs===1?'':'es')+' played'+(GWMAX?', GW1–'+GWMAX:'')+'">'+
+     m.dchit.toFixed(0)+'% <em class="frac">'+sf.dch+'/'+sf.dcs+'</em></span>';
    var s2=stats(p);
-   var tip=s2&&s2.dcs!==undefined?(s2.dch+' of '+s2.dcs+' starts'+(GWMAX?', GW1–'+GWMAX:'')):'';
+   var tip=s2&&s2.dcs!==undefined?(s2.dch+' of '+s2.dcs+' match'+(s2.dcs===1?'':'es')+' played'+(GWMAX?', GW1–'+GWMAX:'')):'';
    return '<span class="'+c+'" title="'+tip+'">'+m.dchit.toFixed(0)+'%</span>';}},
  {k:'dcp90',t:'DC pts/90',p90:true,d:1,r:function(p,m){return num(m.dcp90,2);}},
  {k:'cs',t:'CS',d:1,r:function(p,m){return '<span class="mut">'+num(m.cs,0)+'</span>';}},
@@ -2185,10 +2190,13 @@ function ingestCSV(pl,fx,tm){
       (stale?' Transfers and price changes since then will not show — use <b>try official API</b> for the very latest.':'')+'</span>';
   });
   if(S.deepGw) setTimeout(function(){
-    deepOfficial().catch(function(){ deepRefresh(); });
+    deepOfficial().catch(function(e){
+      DEEP_WHY=e&&e.message?e.message:'not found';
+      deepRefresh();
+    });
   },50);
 }
-var GWROWS=null, ID2CODE={}, LIVE_ADDED=0, WINSTATS=null, GWMAX=0, GWLAG=null, GWSRC='archive';
+var GWROWS=null, ID2CODE={}, LIVE_ADDED=0, WINSTATS=null, GWMAX=0, GWLAG=null, GWSRC='archive', DEEP_WHY='';
 /* [gw,mn,pts,g,a,cs,gc,sv,bo,bps,xg,xa,xgc,dc,starts] */
 /* windows use live per-gameweek data only - never a previous season */
 function activeGwRows(){ return (S.season==='live') ? GWROWS : null; }
@@ -2215,8 +2223,8 @@ function buildWindow(n){
       /* recompute DefCon hits inside the window */
       var thr=(pos===2)?10:12, hits=0, starts=0;
       rows.forEach(function(r){
-        if(r.c!==+k||r.gw<lo) return;
-        if(r.mn>=60) starts++;
+        if(r.c!==+k||r.gw<lo||r.mn<=0) return;
+        starts++;
         if(r.dcp!==undefined ? r.dcp>0 : r.dc>=thr) hits++;
       });
       a.dch=hits; a.dcs=starts; a.dcp=hits*2;
@@ -2238,10 +2246,10 @@ function applyGw(){
     var a=agg[r.c]||(agg[r.c]={dch:0,dcs:0,ln:0,la:0});
     if(r.mn>0){
       if(r.dcp!==undefined){
-        if(r.mn>=60) a.dcs++;
+        a.dcs++;                       /* denominator = matches played */
         if(r.dcp>0) a.dch++;
       } else if(r.pos!=='GK'){
-        if(r.mn>=60) a.dcs++;
+        a.dcs++;
         if(r.dc>=(r.pos==='DEF'?10:12)) a.dch++;
       }
       if(r.gw>=lo) a.la++;
@@ -2289,7 +2297,9 @@ function deepOfficial(){
     if(S.statWin>0) buildWindow(S.statWin);
     renderWinChips();
     var prev=document.getElementById('dataNote').innerHTML;
-    note(prev+' · official match data through GW'+mx,'quiet');
+    var prov=(j.provisional&&j.provisional.length)?j.provisional:null;
+    note(prev+' · <b>official</b> match data through GW'+mx+
+      (prov?' (GW'+prov.join(', GW')+' still provisional)':''),'quiet');
     render();
     return true;
   });
@@ -2313,7 +2323,8 @@ function deepRefresh(){
     var mx=applyGw();
     if(S.statWin>0) buildWindow(S.statWin);
     renderWinChips();
-    note(prev+' · match data through GW'+mx+
+    note(prev+' · <span class="stalewarn">community archive</span> through GW'+mx+
+      (DEEP_WHY?' (your own data/gwstats.json was not used: '+esc(DEEP_WHY)+')':'')+
       (GWLAG?' <span class="stalewarn">— source is behind the live game, so DefCon and window stats stop at GW'+mx+'</span>':''),
       'quiet');
     render();
